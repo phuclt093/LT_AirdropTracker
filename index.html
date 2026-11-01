@@ -88,6 +88,16 @@ button.danger{color:var(--bad)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .mfoot{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
 .hint{font-size:11px;color:var(--muted)}
+.chainbox{margin-top:10px;background:#0e1218;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.chainbox .top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px}
+.chainbox .nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
+.chainbox .n b{display:block;font-family:"JetBrains Mono",monospace;font-size:16px}
+.chainbox .n span{font-size:11px;color:var(--muted)}
+.chainbox .run{font-size:12px;margin-top:8px;color:var(--muted)}
+.chainbox .run.ok{color:var(--acc)} .chainbox .run.err{color:var(--bad)}
+.spark{display:flex;gap:2px;align-items:flex-end;height:22px;margin-top:8px}
+.spark i{flex:1;background:#2f7a52;border-radius:2px;min-height:2px}
+.spark i.z{background:var(--panel2)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#06240f;padding:8px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
 </style>
 </head>
@@ -232,9 +242,11 @@ async function loadRepoList(){
   try{const r=await fetch("airdrops.json",{cache:"no-store"});if(!r.ok)return [];const j=await r.json();return Array.isArray(j.airdrops)?j.airdrops:[]}
   catch(e){return []}
 }
+async function fetchJson(u){try{const r=await fetch(u,{cache:"no-store"});return r.ok?await r.json():null}catch(e){return null}}
 function emptyState(){return {version:1,items:[],wallets:[],dailyDone:{},activity:{},removed:[]}}
 
 let state=null, filter="all", q="", editingId=null, mode="local";
+let repoById={}, onchain={stats:null,runs:null};
 
 /* ---------- persistence: localStorage trên trình duyệt ---------- */
 function setSync(m,txt){mode=m;const d=document.getElementById("syncDot");d.className="dot "+(m==="ok"?"ok":"local");document.getElementById("syncTxt").textContent=txt}
@@ -251,7 +263,9 @@ function normalize(s){
 async function init(){
   state=normalize(loadLocal())||emptyState();
   render();
-  const repo=await loadRepoList();
+  const [repo,stats,runs]=await Promise.all([loadRepoList(),fetchJson("data/stats.json"),fetchJson("data/runs.json")]);
+  repo.forEach(j=>{if(j.id)repoById[j.id]=j});
+  onchain={stats,runs};
   // thêm kèo mới từ airdrops.json (không ghi đè kèo bạn đã sửa / đã xoá)
   let added=0;
   repo.forEach(j=>{if(j.id&&!state.items.some(i=>i.id===j.id)&&!state.removed.includes(j.id)){state.items.push(fromJson(j));added++}});
@@ -284,6 +298,35 @@ function streak(){
   if(!(state.activity[todayStr(d)]>0))d.setDate(d.getDate()-1);
   while(state.activity[todayStr(d)]>0){n++;d.setDate(d.getDate()-1)}
   return n;
+}
+
+/* ---------- số liệu on-chain do worker trên máy nhà đẩy lên ---------- */
+function chainKeyOf(i){return i.onchain||(repoById[i.id]&&repoById[i.id].onchain)||""}
+function ago(iso){if(!iso)return"";const m=Math.round((Date.now()-new Date(iso))/60000);if(m<60)return m+" phút trước";const h=Math.round(m/60);if(h<48)return h+" giờ trước";return Math.round(h/24)+" ngày trước"}
+const ACTION_VI={nativeSelf:"gửi USDC",usdcErc20Self:"chuyển USDC",usdcApprove:"approve",eurcSelf:"chuyển EURC",deploy:"deploy contract",pokeContract:"gọi contract"};
+function onchainPanel(i){
+  const key=chainKeyOf(i);if(!key)return"";
+  const c=onchain.stats&&onchain.stats.chains&&onchain.stats.chains[key];
+  const run=onchain.runs&&onchain.runs[key]&&onchain.runs[key].last;
+  if(!c||!c.wallets||!c.wallets.length)return `<div class="chainbox"><div class="top"><span>⛓ On-chain · ${esc(key)}</span></div><div class="hint">Chưa có số liệu. Cài worker trên máy nhà (worker/README.md) để tự farm và hiện số liệu ở đây.</div></div>`;
+  const w=c.wallets[0];
+  const tok=Object.entries(w.tokens||{}).map(([k,v])=>`<div class="n"><b>${v}</b><span>${esc(k)}</span></div>`).join("");
+  // 14 ngày gần nhất: số giao dịch mỗi ngày (chênh lệch nonce)
+  const h=w.history||{};const days=[];let prev=(w.base!=null?w.base:null);const keys=Object.keys(h).sort();
+  const byDay={};keys.forEach(d=>{byDay[d]=prev===null?0:Math.max(0,h[d]-prev);prev=h[d]});
+  for(let k=13;k>=0;k--){const d=todayStr(new Date(Date.now()-k*864e5));days.push(byDay[d]||0)}
+  const mx=Math.max(1,...days);
+  let runHtml="";
+  if(run){
+    if(run.skipped)runHtml=`<div class="run">😴 Worker nghỉ ${ago(run.at)} (cho giống người thật)</div>`;
+    else if(run.ok)runHtml=`<div class="run ok">✅ Worker chạy ${ago(run.at)}: ${run.txCount} giao dịch${run.actions&&run.actions.length?" ("+run.actions.map(a=>ACTION_VI[a.type]||a.type).join(", ")+")":""}</div>`;
+    else runHtml=`<div class="run err">❌ Worker lỗi ${ago(run.at)}: ${esc(run.error||"không rõ")}</div>`;
+  }
+  const low=w.balance<1?`<div class="run err">⚠️ Sắp hết ${esc(c.symbol||"gas")} — <a href="${esc(safeUrl(c.faucet))}" target="_blank" rel="noopener" style="color:var(--acc2)">xin faucet</a></div>`:"";
+  return `<div class="chainbox"><div class="top"><span>⛓ ${esc(c.name)} · ${esc(w.label)} ${esc(w.short)}</span><span>cập nhật ${ago(onchain.stats.updated)}</span></div>
+    <div class="nums"><div class="n"><b>${w.nonce}</b><span>giao dịch</span></div><div class="n"><b>${w.activeDays}</b><span>ngày hoạt động</span></div><div class="n"><b>${w.balance}</b><span>${esc(c.symbol)}</span></div>${tok}</div>
+    <div class="spark" title="Số giao dịch mỗi ngày, 14 ngày gần nhất">${days.map(v=>`<i class="${v?"":"z"}" style="height:${v?Math.max(15,v/mx*100):10}%"></i>`).join("")}</div>
+    ${runHtml}${low}</div>`;
 }
 
 /* ---------- render ---------- */
@@ -323,6 +366,7 @@ function render(){
         <button class="ghost" data-edit="${i.id}">Sửa</button></div>
       ${i.daily.length?`<div class="tasks"><div class="hint">Hằng ngày</div>${i.daily.map(t=>`<label class="task ${isDoneToday(t.id)?"ok":""}"><input type="checkbox" data-daily="${t.id}" ${isDoneToday(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
       ${i.once.length?`<div class="tasks"><div class="hint">Làm 1 lần · ${onceDone}/${i.once.length}</div>${i.once.map(t=>`<label class="task ${i.doneOnce.includes(t.id)?"ok":""}"><input type="checkbox" data-once="${i.id}|${t.id}" ${i.doneOnce.includes(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
+      ${onchainPanel(i)}
       ${(i.recv||Number(i.sold))?`<div class="money">${i.recv?"Nhận: "+esc(i.recv):""}${i.recv&&Number(i.sold)?" · ":""}${Number(i.sold)?"Bán: "+fmtVND(i.sold):""}</div>`:""}
       ${(web||x)?`<div class="links">${web?`<a href="${esc(web)}" target="_blank" rel="noopener">🌐 Website</a>`:""}${x?`<a href="${esc(x)}" target="_blank" rel="noopener">𝕏 X</a>`:""}</div>`:""}
       ${i.note?`<div class="note">${esc(i.note)}</div>`:""}

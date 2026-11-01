@@ -1,0 +1,17 @@
+{
+  "name": "lt-airdrop-worker",
+  "private": true,
+  "type": "module",
+  "description": "Worker chạy trên máy nhà: farm testnet + thu thập số liệu on-chain cho Airdrop Tracker",
+  "engines": { "node": ">=20.6" },
+  "scripts": {
+    "farm:arc": "node --env-file=.env farm-arc.mjs",
+    "farm:arc:dry": "DRY_RUN=1 node --env-file=.env farm-arc.mjs",
+    "stats": "node --env-file=.env stats.mjs",
+    "stats:nopush": "NO_PUSH=1 node --env-file=.env stats.mjs",
+    "check": "node --env-file=.env check.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.13.0"
+  }
+}

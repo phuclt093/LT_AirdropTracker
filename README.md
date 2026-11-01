@@ -7,12 +7,15 @@ Bộ công cụ nhỏ để theo dõi các kèo farm airdrop, chạy **miễn ph
 | `index.html` | GitHub Pages | Web theo dõi kèo, tick việc hằng ngày, thống kê, chuỗi ngày farm, ví farm |
 | `airdrops.json` | Trong repo | Danh sách kèo dùng chung cho web và bot |
 | `scripts/remind.mjs` | GitHub Actions (cron) | Mỗi sáng 7:47 gửi danh sách việc cần làm về Telegram |
+| `worker/` | Máy nhà (systemd) | Tự farm testnet (hiện có Arc) + đẩy số liệu on-chain lên web, xem [worker/README.md](worker/README.md) |
+| `data/` | Worker tự cập nhật | `stats.json` (số liệu ví), `runs.json` (kết quả các lần farm) |
 
 ---
 
 ## 1. Đưa lên GitHub
 
 ```bash
+bash setup.sh   # chạy 1 lần: chuyển _workflows/ vào .github/workflows/
 git init
 git add .
 git commit -m "Airdrop tracker"

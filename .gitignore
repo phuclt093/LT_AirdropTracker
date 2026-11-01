@@ -1,0 +1,10 @@
+# KHÔNG BAO GIỜ commit private key
+.env
+*.env
+!.env.example
+worker/.env
+
+node_modules
+worker/logs/
+worker/state/
+.DS_Store
