@@ -1,5 +1,5 @@
 {
-  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập. 'guide': {updated, warn, steps:[{t,d,link,lt}]} — hướng dẫn chi tiết từng bước, web hiện trong khung 📖.",
+  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập. 'guide': {updated, warn, steps:[{t,d,link,lt}]} — hướng dẫn chi tiết từng bước, web hiện trong khung 📖. 'network': thông số EIP-3085 (chainId số, chainName, rpcUrls, nativeCurrency, blockExplorerUrls) — web hiện nút thêm mạng vào MetaMask 1 click. Chỉ điền từ docs chính thức.",
   "repo": "phuclt093/LT_AirdropTracker",
   "airdrops": [
     {
@@ -86,7 +86,7 @@
           },
           {
             "t": "Thêm mạng Arc Testnet vào MetaMask",
-            "d": "Cách nhanh: mở trang docs, bấm nút “Add Arc Testnet” rồi bấm Approve trong MetaMask. Cách thủ công: MetaMask → Settings → Networks → Add a network manually, điền:\n• Network name: Arc Testnet\n• RPC URL: https://rpc.testnet.arc.network\n• Chain ID: 5042002\n• Currency symbol: USDC\n• Block explorer: https://testnet.arcscan.app",
+            "d": "Cách dễ nhất: bấm nút 🦊 “Thêm mạng vào MetaMask” ở đầu khung hướng dẫn này, rồi bấm Approve → Switch network trong MetaMask. Không phải gõ gì.\nNếu muốn thêm tay: bấm ⋮ trong MetaMask → “Expand view” để mở MetaMask dạng toàn trang (sẽ không bị tắt khi bạn chuyển cửa sổ đi copy), rồi Settings → Networks → Add a network manually.\nMetaMask → Settings → Networks → Add a network manually, điền:\n• Network name: Arc Testnet\n• RPC URL: https://rpc.testnet.arc.network\n• Chain ID: 5042002\n• Currency symbol: USDC\n• Block explorer: https://testnet.arcscan.app",
             "link": "https://docs.arc.network/integrate/connect-to-arc",
             "lt": "docs.arc.network"
           },
@@ -119,6 +119,21 @@
             "lt": "docs.arc.network"
           }
         ]
+      },
+      "network": {
+        "chainId": 5042002,
+        "chainName": "Arc Testnet",
+        "rpcUrls": [
+          "https://rpc.testnet.arc.network"
+        ],
+        "nativeCurrency": {
+          "name": "USDC",
+          "symbol": "USDC",
+          "decimals": 18
+        },
+        "blockExplorerUrls": [
+          "https://testnet.arcscan.app"
+        ]
       }
     },
     {
@@ -146,7 +161,7 @@
         "steps": [
           {
             "t": "Thêm mạng GIWA Sepolia (1 click)",
-            "d": "Mở trang explorer, kéo xuống cuối trang, bấm nút thêm mạng vào MetaMask rồi Approve. Nếu muốn thêm thủ công:\n• Network name: GIWA Sepolia\n• RPC URL: https://sepolia-rpc.giwa.io\n• Chain ID: 91342\n• Currency symbol: ETH\n• Block explorer: https://sepolia-explorer.giwa.io",
+            "d": "Cách dễ nhất: bấm nút 🦊 “Thêm mạng vào MetaMask” ở đầu khung hướng dẫn này, rồi bấm Approve → Switch network trong MetaMask. Không phải gõ gì.\nNếu muốn thêm tay: bấm ⋮ trong MetaMask → “Expand view” để mở MetaMask dạng toàn trang (sẽ không bị tắt khi bạn chuyển cửa sổ đi copy), rồi Settings → Networks → Add a network manually.\n• Network name: GIWA Sepolia\n• RPC URL: https://sepolia-rpc.giwa.io\n• Chain ID: 91342\n• Currency symbol: ETH\n• Block explorer: https://sepolia-explorer.giwa.io",
             "link": "https://sepolia-explorer.giwa.io",
             "lt": "sepolia-explorer.giwa.io"
           },
@@ -176,6 +191,21 @@
             "t": "Tự động hoá",
             "d": "Kèo này rất hợp để worker tự làm giao dịch mỗi ngày (giống Arc). Riêng phần xin faucet thì vẫn phải tự bấm. Bấm “🤖 Nhờ viết tool” để Claude làm vào thứ Hai."
           }
+        ]
+      },
+      "network": {
+        "chainId": 91342,
+        "chainName": "GIWA Sepolia",
+        "rpcUrls": [
+          "https://sepolia-rpc.giwa.io"
+        ],
+        "nativeCurrency": {
+          "name": "Ether",
+          "symbol": "ETH",
+          "decimals": 18
+        },
+        "blockExplorerUrls": [
+          "https://sepolia-explorer.giwa.io"
         ]
       }
     },

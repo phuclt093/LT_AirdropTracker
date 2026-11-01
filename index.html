@@ -121,6 +121,11 @@ ol.gsteps .gd{font-size:13px;color:#c5ccd6;white-space:pre-wrap;margin-top:3px;l
 ol.gsteps .gl{display:inline-block;margin-top:6px;font-size:12px;color:#04182a;background:var(--acc2);padding:3px 10px;border-radius:6px;text-decoration:none;font-weight:600}
 ol.gsteps .gdone{margin-left:auto;flex:none;font-size:11px;color:var(--muted);display:flex;align-items:flex-start;gap:4px;cursor:pointer}
 ol.gsteps .gdone input{width:16px;height:16px;accent-color:var(--acc);padding:0;margin:0}
+.mm{display:flex;align-items:center;gap:6px}
+.mmchip{font-family:"JetBrains Mono",monospace;font-size:12px;padding:6px 10px;border-radius:9px;background:var(--panel2);border:1px solid #6a4a1f;color:#ffb35a}
+.netbtn{display:flex;align-items:center;gap:8px;margin:0 12px 10px;padding:9px 12px;border-radius:9px;border:1px solid #6a4a1f;background:#21170c;color:#ffb35a;font-weight:600;font-size:13px;width:calc(100% - 24px);justify-content:center}
+.netbtn:hover{border-color:#ffb35a}
+.netbtn.on{border-color:#2f5a44;background:#0f2219;color:var(--acc)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#06240f;padding:8px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
 </style>
 </head>
@@ -133,6 +138,7 @@ ol.gsteps .gdone input{width:16px;height:16px;accent-color:var(--acc);padding:0;
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <div class="sync"><i class="dot" id="syncDot"></i><span id="syncTxt">Đang tải…</span></div>
+      <div class="mm" id="mmBox"><button id="mmBtn" title="Kết nối ví MetaMask trên trình duyệt này">🦊 Kết nối MetaMask</button></div>
       <button id="suggestBtn" title="Nhờ Claude kiểm tra một kèo bạn thấy">💡 Đề xuất kèo</button>
       <button class="pri" id="addBtn">+ Thêm kèo</button>
     </div>
@@ -391,6 +397,58 @@ function onchainPanel(i){
     ${runHtml}${low}</div>`;
 }
 
+/* ---------- MetaMask: kết nối ví + thêm mạng 1 click (chỉ đọc địa chỉ, KHÔNG ký giao dịch) ---------- */
+let mm={account:null,chainId:null};
+const eth=()=>window.ethereum||null;
+function netOf(i){const r=repoById[i.id];return r&&r.network&&r.network.chainId?r.network:null}
+function netButton(i){
+  const n=netOf(i);if(!n)return "";
+  const on=mm.chainId!=null&&Number(mm.chainId)===Number(n.chainId);
+  return `<button class="netbtn ${on?"on":""}" data-net="${i.id}">${on?"✅ MetaMask đang ở mạng "+esc(n.chainName):"🦊 Thêm mạng "+esc(n.chainName)+" vào MetaMask (1 click)"}</button>`;
+}
+function renderMM(){
+  const box=$("mmBox");if(!box)return;
+  if(mm.account){box.innerHTML=`<span class="mmchip" title="${esc(mm.account)}">🦊 ${esc(mm.account.slice(0,6)+"…"+mm.account.slice(-4))}</span>`}
+  else box.innerHTML=`<button id="mmBtn" title="Kết nối ví MetaMask trên trình duyệt này">🦊 Kết nối MetaMask</button>`;
+}
+function noMetaMask(){toast("Không thấy MetaMask — mở web bằng Chrome/Brave có cài MetaMask, hoặc trong app MetaMask trên điện thoại (mục Trình duyệt)")}
+async function connectMM(){
+  const e=eth();if(!e){noMetaMask();return}
+  try{
+    const acc=await e.request({method:"eth_requestAccounts"});
+    mm.account=acc&&acc[0]||null;mm.chainId=await e.request({method:"eth_chainId"});
+    if(mm.account&&!state.wallets.some(w=>w.addr.toLowerCase()===mm.account.toLowerCase())){
+      state.wallets.push({id:uid(),name:"MetaMask",addr:mm.account});scheduleSave();toast("Đã kết nối và lưu địa chỉ vào Ví farm");
+    }else toast("Đã kết nối MetaMask");
+    render();
+  }catch(err){toast(err&&err.code===4001?"Bạn đã từ chối kết nối":"Không kết nối được: "+(err&&err.message||err))}
+}
+async function addNetwork(i){
+  const e=eth();if(!e){noMetaMask();return}
+  const n=netOf(i);if(!n)return;
+  const hex="0x"+Number(n.chainId).toString(16);
+  try{
+    try{await e.request({method:"wallet_switchEthereumChain",params:[{chainId:hex}]})}
+    catch(sw){
+      if(sw&&(sw.code===4902||(sw.data&&sw.data.originalError&&sw.data.originalError.code===4902)||/Unrecognized chain|not been added/i.test(sw.message||""))){
+        await e.request({method:"wallet_addEthereumChain",params:[{chainId:hex,chainName:n.chainName,rpcUrls:n.rpcUrls,nativeCurrency:n.nativeCurrency,blockExplorerUrls:n.blockExplorerUrls}]});
+      }else throw sw;
+    }
+    mm.chainId=await e.request({method:"eth_chainId"});
+    toast("Xong! MetaMask đã ở mạng "+n.chainName);
+    // tự tick bước "thêm mạng" trong hướng dẫn nếu có
+    const r=repoById[i.id];const k=(r.guide&&r.guide.steps||[]).findIndex(st=>/thêm mạng/i.test(st.t));
+    if(k>=0){state.guideDone=state.guideDone||{};const a=state.guideDone[i.id]||(state.guideDone[i.id]=[]);if(!a.includes(k))a.push(k);scheduleSave()}
+    render();
+  }catch(err){toast(err&&err.code===4001?"Bạn đã bấm Từ chối trong MetaMask":"Lỗi: "+(err&&err.message||err))}
+}
+async function initMM(){
+  const e=eth();if(!e)return;
+  try{const acc=await e.request({method:"eth_accounts"});mm.account=acc&&acc[0]||null;mm.chainId=await e.request({method:"eth_chainId"})}catch(x){}
+  if(e.on){e.on("accountsChanged",a=>{mm.account=a&&a[0]||null;render()});e.on("chainChanged",c=>{mm.chainId=c;render()})}
+  render();
+}
+
 function guidePanel(i){
   const r=repoById[i.id];const g=r&&r.guide;if(!g||!(g.steps||[]).length)return "";
   const done=(state.guideDone&&state.guideDone[i.id])||[];
@@ -398,6 +456,7 @@ function guidePanel(i){
   const open=openGuides.has(i.id)?" open":"";
   return `<details class="guide" data-guide="${i.id}"${open}><summary>📖 Hướng dẫn chi tiết · ${n}/${g.steps.length} bước<span>${g.updated?"cập nhật "+new Date(g.updated).toLocaleDateString("vi-VN"):""}</span></summary>
     ${g.warn?`<div class="gwarn">⚠️ ${esc(g.warn)}</div>`:""}
+    ${netButton(i)}
     <ol class="gsteps">${g.steps.map((st,k)=>{const ok=done.includes(k);const L=safeUrl(st.link);
       return `<li class="${ok?"ok":""}"><div class="num">${ok?"✓":k+1}</div><div style="flex:1;min-width:0"><div class="gt">${esc(st.t)}</div>${st.d?`<div class="gd">${esc(st.d)}</div>`:""}${L?`<a class="gl" href="${esc(L)}" target="_blank" rel="noopener">Mở ${esc(st.lt||"link")} ↗</a>`:""}</div><label class="gdone"><input type="checkbox" data-gstep="${i.id}|${k}" ${ok?"checked":""}>xong</label></li>`}).join("")}</ol></details>`;
 }
@@ -473,6 +532,7 @@ function render(){
       ${(weekly.tools||[]).length?`<div style="margin-top:4px" class="hint">Tool mới: ${weekly.tools.map(n=>`<span class="pill">🤖 ${esc(n)}</span>`).join("")}</div>`:""}
       ${weekly.pr&&safeUrl(weekly.pr)?`<div style="margin-top:8px"><a href="${esc(safeUrl(weekly.pr))}" target="_blank" rel="noopener" style="color:var(--acc2);font-size:12px">Xem Pull Request tuần này ↗</a></div>`:""}`;
   }
+  renderMM();
   // wallets
   document.getElementById("wallets").innerHTML=!state.wallets.length?`<div class="hint">Chưa có ví nào.</div>`:state.wallets.map(w=>`<div class="wallet"><em>${esc(w.name)}</em><span title="${esc(w.addr)}">${esc(w.addr.slice(0,8)+"…"+w.addr.slice(-6))}</span><button class="ghost" data-copy="${esc(w.addr)}">Copy</button><button class="ghost danger" data-delw="${w.id}">✕</button></div>`).join("");
 }
@@ -573,6 +633,8 @@ document.addEventListener("change",e=>{
   else if(d.once){const [iid,tid]=d.once.split("|");const it=state.items.find(x=>x.id===iid);if(it)toggleOnce(it,tid)}
 });
 document.addEventListener("click",async e=>{
+  if(e.target.closest("#mmBtn")){connectMM();return}
+  const nb=e.target.closest("[data-net]");if(nb){e.preventDefault();addNetwork(state.items.find(x=>x.id===nb.dataset.net));return}
   const t=e.target.closest("[data-f],[data-edit],[data-copy],[data-delw],[data-req]");if(!t)return;
   if(t.dataset.req){openReq("Tool",state.items.find(x=>x.id===t.dataset.req));return}
   if(t.dataset.f){filter=t.dataset.f;render()}
@@ -588,7 +650,7 @@ let tt;function toast(s){const el=$("toast");el.textContent=s;el.style.display="
 // re-render at midnight so daily tasks reset
 let lastDay=todayStr();setInterval(()=>{if(todayStr()!==lastDay){lastDay=todayStr();render()}},60000);
 
-init();
+init().then(initMM);
 })();
 </script>
 </body>
