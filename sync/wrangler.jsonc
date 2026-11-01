@@ -1,0 +1,15 @@
+{
+  // Cloudflare Worker đồng bộ tiến độ Airdrop Tracker theo ví MetaMask.
+  // Hướng dẫn cài: sync/README.md
+  "name": "airdrop-tracker-sync",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    // Web được phép gọi worker (cách nhau dấu phẩy, không có dấu / ở cuối)
+    "ALLOWED_ORIGINS": "https://phuclt093.github.io"
+  },
+  "kv_namespaces": [
+    // Thay id bằng id in ra từ: npx wrangler kv namespace create SYNC
+    { "binding": "SYNC", "id": "b593cce3bc4849c19e882999468b51d3" }
+  ]
+}

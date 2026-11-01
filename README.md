@@ -9,6 +9,7 @@ Bộ công cụ nhỏ để theo dõi các kèo farm airdrop, chạy **miễn ph
 | `scripts/remind.mjs` | GitHub Actions (cron) | Mỗi sáng 7:47 gửi danh sách việc cần làm về Telegram |
 | `worker/` | Máy nhà (systemd) | Tự farm testnet (hiện có Arc) + đẩy số liệu on-chain lên web, xem [worker/README.md](worker/README.md) |
 | `data/` | Worker tự cập nhật | `stats.json` (số liệu ví), `runs.json` (kết quả các lần farm), `weekly.json` (hướng dẫn tuần) |
+| `sync/` | Cloudflare Workers (miễn phí) | Đăng nhập bằng MetaMask, đồng bộ tiến độ giữa các máy — xem [sync/README.md](sync/README.md) |
 | `docs/WEEKLY.md` | Claude, sáng thứ Hai | Dò kèo mới, viết tool theo yêu cầu, cập nhật hướng dẫn tuần, gửi 1 Pull Request để bạn duyệt |
 
 ---

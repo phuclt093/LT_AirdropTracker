@@ -8,3 +8,7 @@ node_modules
 worker/logs/
 worker/state/
 .DS_Store
+
+# Cloudflare worker (sync/)
+.dev.vars
+.wrangler/

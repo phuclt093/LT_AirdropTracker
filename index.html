@@ -310,7 +310,86 @@ let openGuides=new Set(), repoById={}, onchain={stats:null,runs:null}, weekly=nu
 /* ---------- persistence: localStorage trên trình duyệt ---------- */
 function setSync(m,txt){mode=m;const d=document.getElementById("syncDot");d.className="dot "+(m==="ok"?"ok":"local");document.getElementById("syncTxt").textContent=txt}
 function loadLocal(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return null}}
-function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));setSync("ok","Đã lưu trên trình duyệt")}catch(e){setSync("local","Không lưu được (trình duyệt chặn bộ nhớ)")}}
+function saveLocal(fromCloud){
+  if(!fromCloud)state.updatedAt=Date.now();
+  try{localStorage.setItem(LS_KEY,JSON.stringify(state));if(!cloud.token)setSync("ok","Đã lưu trên trình duyệt")}catch(e){setSync("local","Không lưu được (trình duyệt chặn bộ nhớ)")}
+  if(cloud.token&&!fromCloud){clearTimeout(cloud.timer);setSync("local","Đang đồng bộ…");cloud.timer=setTimeout(pushCloud,1500)}
+}
+
+/* ---------- Đồng bộ theo ví: đăng nhập bằng chữ ký MetaMask (không tốn gas) ---------- */
+const TK_KEY="airdrop-sync-token",TA_KEY="airdrop-sync-addr";
+let cloud={api:"",token:null,addr:null,timer:null,busy:false};
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
+async function api(path,opt){
+  const r=await fetch(cloud.api.replace(/\/$/,"")+path,{...opt,headers:{"Content-Type":"application/json",...(cloud.token?{Authorization:"Bearer "+cloud.token}:{}),...((opt&&opt.headers)||{})}});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401&&cloud.token){logoutCloud(true)}
+  if(!r.ok)throw new Error(j.error||("HTTP "+r.status));
+  return j;
+}
+function loginMessage(host,address,nonce,issuedAt){
+  return host+" muốn bạn đăng nhập Airdrop Tracker bằng ví:\n"+address+"\n\nChữ ký này chỉ để xác nhận bạn là chủ ví.\nKHÔNG chuyển tiền, KHÔNG tốn gas.\n\nMã: "+nonce+"\nThời gian: "+issuedAt;
+}
+const toHex=s=>"0x"+Array.from(new TextEncoder().encode(s)).map(b=>b.toString(16).padStart(2,"0")).join("");
+async function loginCloud(){
+  const e=eth();if(!e){noMetaMask();return}
+  if(!cloud.api){toast("Chưa cài máy chủ đồng bộ (xem sync/README.md)");return}
+  try{
+    const acc=await e.request({method:"eth_requestAccounts"});const address=(acc&&acc[0]||"").toLowerCase();if(!address)return;
+    mm.account=acc[0];
+    const {nonce}=await api("/nonce");
+    const msg=loginMessage(location.host,address,nonce,new Date().toISOString());
+    toast("MetaMask sẽ hỏi ký tin nhắn — không tốn gas, bấm Ký/Sign");
+    const signature=await e.request({method:"personal_sign",params:[toHex(msg),acc[0]]});
+    const r=await api("/login",{method:"POST",body:JSON.stringify({address,message:msg,signature})});
+    cloud.token=r.token;cloud.addr=r.address;lsSet(TK_KEY,r.token);lsSet(TA_KEY,r.address);
+    if(!state.wallets.some(w=>w.addr.toLowerCase()===address)){state.wallets.push({id:uid(),name:"MetaMask",addr:r.address});saveLocal(true)}
+    await pullCloud(true);render();
+  }catch(err){toast(err&&err.code===4001?"Bạn đã từ chối ký":"Đăng nhập lỗi: "+(err&&err.message||err))}
+}
+function logoutCloud(expired){cloud.token=null;cloud.addr=null;lsSet(TK_KEY,null);lsSet(TA_KEY,null);setSync("ok","Đã lưu trên trình duyệt");toast(expired?"Phiên đăng nhập hết hạn — đăng nhập lại để đồng bộ":"Đã đăng xuất (dữ liệu vẫn còn trên trình duyệt này)");render()}
+/* Gộp 2 bản tiến độ (dùng lúc đăng nhập): giữ mọi việc đã tick ở cả hai bên */
+function mergeStates(a,b){
+  const m=normalize(JSON.parse(JSON.stringify(b)));const A=normalize(JSON.parse(JSON.stringify(a)));
+  const byId=new Map(m.items.map(i=>[i.id,i]));
+  A.items.forEach(i=>{const j=byId.get(i.id);
+    if(!j){if(!(m.removed||[]).includes(i.id))m.items.push(i);return}
+    j.doneOnce=[...new Set([...(j.doneOnce||[]),...(i.doneOnce||[])])];
+    if(i.userEdited&&!j.userEdited)Object.assign(j,i,{doneOnce:j.doneOnce});
+    if(!j.sold&&i.sold)j.sold=i.sold; if(!j.recv&&i.recv)j.recv=i.recv;
+  });
+  m.removed=[...new Set([...(m.removed||[]),...(A.removed||[])])];
+  m.items=m.items.filter(i=>!m.removed.includes(i.id)||!i.fromRepo);
+  for(const[d,ids]of Object.entries(A.dailyDone))m.dailyDone[d]=[...new Set([...(m.dailyDone[d]||[]),...ids])];
+  for(const[d,c]of Object.entries(A.activity))m.activity[d]=Math.max(m.activity[d]||0,c);
+  for(const[k,arr]of Object.entries(A.guideDone||{}))m.guideDone[k]=[...new Set([...(m.guideDone[k]||[]),...arr])];
+  A.wallets.forEach(w=>{if(!m.wallets.some(x=>x.addr.toLowerCase()===w.addr.toLowerCase()))m.wallets.push(w)});
+  return m;
+}
+async function pullCloud(afterLogin){
+  if(!cloud.token||cloud.busy)return;cloud.busy=true;
+  try{
+    const r=await api("/state");
+    if(afterLogin){
+      // Lần đầu đăng nhập trên máy này: gộp tiến độ máy này với tiến độ đã lưu theo ví
+      if(r.state){const s=normalize(r.state);if(s){state=mergeStates(state,s)}}
+      saveLocal();render();cloud.busy=false;await pushCloud();
+      toast(r.state?"Đã gộp tiến độ máy này với tiến độ đã lưu theo ví":"Đã lưu tiến độ lên ví — máy khác đăng nhập là thấy");return;
+    }
+    if(r.state&&Number(r.updatedAt)>(state.updatedAt||0)){
+      const s=normalize(r.state);if(s){state=s;state.updatedAt=Number(r.updatedAt);saveLocal(true);render()}
+      setSync("ok","Đã đồng bộ theo ví");
+    }else if(!r.state||(state.updatedAt||0)>Number(r.updatedAt)){cloud.busy=false;await pushCloud();return}
+    else setSync("ok","Đã đồng bộ theo ví");
+  }catch(e){setSync("local","Chưa đồng bộ được: "+e.message)}
+  cloud.busy=false;
+}
+async function pushCloud(){
+  if(!cloud.token)return;
+  try{await api("/state",{method:"PUT",body:JSON.stringify({state,updatedAt:state.updatedAt||Date.now()})});setSync("ok","Đã đồng bộ theo ví")}
+  catch(e){setSync("local","Chưa đồng bộ được: "+e.message)}
+}
 function scheduleSave(){saveLocal()}
 function normalize(s){
   if(!s||!Array.isArray(s.items))return null;
@@ -324,6 +403,8 @@ async function init(){
   render();
   const [repo,stats,runs,wk,meta]=await Promise.all([loadRepoList(),fetchJson("data/stats.json"),fetchJson("data/runs.json"),fetchJson("data/weekly.json"),fetchJson("airdrops.json")]);
   weekly=wk;repoSlug=(meta&&meta.repo)||guessRepo();
+  cloud.api=(meta&&meta.syncApi)||"";
+  if(cloud.api){cloud.token=lsGet(TK_KEY);cloud.addr=lsGet(TA_KEY)}
   loadRequests();
   repo.forEach(j=>{if(j.id)repoById[j.id]=j});
   onchain={stats,runs};
@@ -337,12 +418,17 @@ async function init(){
     i.doneOnce=i.doneOnce.filter(id=>i.once.some(t=>t.id===id));
     if(before!==JSON.stringify([i.name,i.chain,i.status,i.prio,i.web,i.x,i.note,i.daily.map(t=>t.t),i.once.map(t=>t.t)]))synced++;
   });
-  if(synced)saveLocal();
+  if(synced)saveLocal(true);
   let added=0;
   repo.forEach(j=>{if(j.id&&!state.items.some(i=>i.id===j.id)&&!state.removed.includes(j.id)){state.items.push(fromJson(j));added++}});
-  if(added){saveLocal();toast("Thêm "+added+" kèo mới từ airdrops.json")}
+  if(added){saveLocal(true);toast("Thêm "+added+" kèo mới từ airdrops.json")}
   else setSync("ok","Đã lưu trên trình duyệt");
   render();
+  if(cloud.token)await pullCloud(false);
+  // quay lại tab / cửa sổ thì kéo bản mới nhất (vd vừa tick trên máy khác); mỗi 2 phút cũng kiểm tra 1 lần
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cloud.token)pullCloud(false)});
+  window.addEventListener("focus",()=>{if(cloud.token)pullCloud(false)});
+  setInterval(()=>{if(cloud.token&&!document.hidden)pullCloud(false)},120000);
 }
 
 /* ---------- logic ---------- */
@@ -411,7 +497,10 @@ function netButton(i){
 }
 function renderMM(){
   const box=$("mmBox");if(!box)return;
-  if(mm.account){box.innerHTML=`<span class="mmchip" title="${esc(mm.account)}">🦊 ${esc(mm.account.slice(0,6)+"…"+mm.account.slice(-4))}</span>`}
+  const short=a=>esc(a.slice(0,6)+"…"+a.slice(-4));
+  if(cloud.token&&cloud.addr){box.innerHTML=`<span class="mmchip" title="Đã đăng nhập & đồng bộ theo ví ${esc(cloud.addr)}">☁️ ${short(cloud.addr)}</span><button class="ghost" id="logoutBtn" title="Đăng xuất">Đăng xuất</button>`;return}
+  if(cloud.api){box.innerHTML=`${mm.account?`<span class="mmchip">🦊 ${short(mm.account)}</span>`:""}<button id="loginBtn" title="Ký 1 tin nhắn (không tốn gas) để đồng bộ tiến độ giữa các máy">🔐 Đăng nhập bằng MetaMask</button>`;return}
+  if(mm.account){box.innerHTML=`<span class="mmchip" title="${esc(mm.account)}">🦊 ${short(mm.account)}</span>`}
   else box.innerHTML=`<button id="mmBtn" title="Kết nối ví MetaMask trên trình duyệt này">🦊 Kết nối MetaMask</button>`;
 }
 function noMetaMask(){toast("Không thấy MetaMask — mở web bằng Chrome/Brave có cài MetaMask, hoặc trong app MetaMask trên điện thoại (mục Trình duyệt)")}
@@ -644,6 +733,8 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("click",async e=>{
   if(e.target.closest("#mmBtn")){connectMM();return}
+  if(e.target.closest("#loginBtn")){loginCloud();return}
+  if(e.target.closest("#logoutBtn")){logoutCloud(false);return}
   const nb=e.target.closest("[data-net]");if(nb){e.preventDefault();addNetwork(state.items.find(x=>x.id===nb.dataset.net));return}
   const t=e.target.closest("[data-f],[data-edit],[data-copy],[data-delw],[data-req]");if(!t)return;
   if(t.dataset.req){openReq("Tool",state.items.find(x=>x.id===t.dataset.req));return}
