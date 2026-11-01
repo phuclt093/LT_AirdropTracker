@@ -16,6 +16,7 @@ Tài liệu này là "sổ tay" cho buổi cập nhật tự động mỗi sáng
 
 1. **Đọc issue đang mở**: `gh issue list --state open`
    - `[Tool] <tên kèo>`: yêu cầu viết tool farm (xem mục "Viết tool mới" bên dưới)
+   - `[Bug] <tên tool> vX` / `[Góp ý] <tên tool> vX`: báo lỗi hoặc góp ý cho tool (gửi từ nút 🐞 trong app hoặc trên tracker, thường kèm nhật ký). Xem mục "Sửa lỗi tool" bên dưới
    - `[Kèo] <tên>`: đề xuất kèo, cần kiểm tra rồi thêm vào `airdrops.json` hoặc từ chối kèm lý do
 2. **Dò kèo mới**: tìm testnet/points program mới trong 7 ngày qua (trang tổng hợp airdrop, tin tức, X chính thức của dự án). Chỉ thêm **tối đa 3 kèo/tuần**, ưu tiên kèo có:
    - đội ngũ hoặc nhà đầu tư rõ ràng, có testnet đang chạy thật,
@@ -82,6 +83,16 @@ Tool là **app độc lập** chạy trên máy người dùng, không chạy tr
    Tool gọi contract đặc biệt (router DEX…) thì khai báo mock trong `chains.<key>.mocks` (`{ "<address>": "<solidity source của contract M>" }`).
 6. **Phát hành:** `bash tools/publish.sh <id>`. Script đóng gói, tạo GitHub Release `tool-<id>-v<version>`, rồi ghi field `tool` (link tải) vào `airdrops.json`. Không có quyền tạo release thì vẫn commit mã nguồn trong PR, ghi rõ trong PR là chủ repo cần chạy `bash tools/publish.sh <id>` sau khi merge.
 7. Trong `guide` của kèo, thêm 1 bước "Tải tool": bấm ⬇️ → giải nén → nháy đúp → làm 4 bước trên giao diện. Nhắc cảnh báo SmartScreen trên Windows ("More info → Run anyway") và cách bật "Executable as Program" trên Linux nếu nháy đúp không chạy.
+
+## Sửa lỗi tool (`[Bug]` / `[Góp ý]`)
+
+1. Đọc mô tả và nhật ký trong issue. Xác định tool (`tools/<id>`), phiên bản, hệ điều hành.
+2. **Tái hiện lỗi trước khi sửa**: viết thêm tình huống vào `tools/test/simulate.mjs` (hoặc mock trong `chains.<key>.mocks`) sao cho test **đỏ** vì đúng lỗi đó. Lỗi do mạng thật (RPC đổi, contract đổi) thì kiểm tra lại docs chính thức trước.
+3. Sửa rồi chạy lại test cho tới khi xanh: cả mã nguồn lẫn file Linux đã đóng gói, 5/5.
+4. **Tăng phiên bản** trong `tools/<id>/tool.json`: sửa lỗi thì tăng số cuối (1.2.0 → 1.2.1), thêm tính năng theo góp ý thì tăng số giữa (1.2.1 → 1.3.0). Phát hành bằng `bash tools/publish.sh <id>` (hoặc ghi rõ trong PR là chủ repo cần chạy).
+5. Trả lời trong issue bằng tiếng Việt: nguyên nhân (1–2 câu, dễ hiểu), đã sửa ở bản nào, người dùng cần làm gì (tải lại bản mới; ví và lịch sử được giữ nguyên). Ghi `Closes #N` trong PR.
+6. Góp ý không làm được hoặc không an toàn (vd: chạy nhiều ví, vượt captcha) thì trả lời lịch sự, giải thích lý do, rồi đóng issue.
+7. Nhật ký trong issue đã được ẩn key và rút gọn địa chỉ. Nếu vẫn lỡ thấy private key hay seed phrase trong issue, **sửa issue để xoá ngay** và nhắn người dùng chuyển hết tài sản sang ví mới.
 
 ## Định dạng `data/weekly.json`
 

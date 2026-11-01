@@ -53,10 +53,11 @@ export async function startGui(api) {
       if (p === "/api/log") { const from = Number(url.searchParams.get("from") || 0); return send(res, 200, { running: job.running, lines: job.lines.slice(from), total: job.lines.length, result: job.result }); }
       if (p === "/api/schedule" && req.method === "POST") { const b = await readBody(req); return send(res, 200, api.schedule(!!b.on)); }
       if (p === "/api/telegram" && req.method === "POST") { const b = await readBody(req); return send(res, 200, await api.setTelegram(b.token || "", b.chat || "")); }
+      if (p === "/api/report" && req.method === "POST") { const b = await readBody(req); const r = api.report(b); openBrowser(r.url); return send(res, 200, r); }
       if (p === "/api/settings" && req.method === "POST") { const b = await readBody(req); return send(res, 200, api.setSettings(b)); }
       if (p === "/api/quit" && req.method === "POST") { send(res, 200, { ok: true }); setTimeout(() => process.exit(0), 300); return; }
       return send(res, 404, { error: "not found" });
-    } catch (e) { return send(res, 500, { error: String(e.message || e) }); }
+    } catch (e) { return send(res, 500, { error: String(e.message || e) || "Lỗi không rõ" }); }
   });
 
   const port = Number(process.env.LTFARM_PORT || 0);
@@ -102,7 +103,13 @@ details summary{cursor:pointer;color:var(--b);font-weight:600}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--a);color:#06240f;padding:9px 18px;border-radius:20px;font-weight:600;display:none}
 </style></head><body><div class="wrap">
 <div class="top"><div><h1>🪂 ${esc(tool.name)}</h1><div class="sub">v${esc(tool.version)} · chạy trên máy bạn · <span id="plat"></span></div></div>
-<button id="quit" title="Tắt tool (lịch tự chạy vẫn hoạt động)">Thoát</button></div>
+<div class="row"><button id="reportBtn" title="Báo lỗi hoặc góp ý cho tool">🐞 Báo lỗi / Góp ý</button><button id="quit" title="Tắt tool (lịch tự chạy vẫn hoạt động)">Thoát</button></div></div>
+<div class="card" id="reportCard" style="display:none"><h2>🐞 Báo lỗi / Góp ý</h2>
+<div class="hint">Bấm Gửi sẽ mở GitHub với nội dung điền sẵn — bạn chỉ cần bấm <b>Submit</b>. Sáng thứ Hai Claude đọc, sửa lỗi và phát hành bản mới.</div>
+<div class="row" style="margin-bottom:10px"><label><input type="radio" name="rk" value="bug" checked style="width:auto"> Lỗi</label><label><input type="radio" name="rk" value="idea" style="width:auto"> Góp ý</label></div>
+<textarea id="reportText" rows="4" style="width:100%;background:var(--p2);border:1px solid var(--line);color:var(--t);border-radius:10px;padding:11px 12px;font:inherit" placeholder="Bạn bấm gì, thấy lỗi gì / muốn tool có thêm gì…"></textarea>
+<label class="hint" style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="withLogs" checked style="width:auto"> Đính kèm nhật ký gần nhất (địa chỉ ví được rút gọn, private key luôn bị ẩn)</label>
+<div class="row" style="margin-top:6px"><button class="pri" id="reportSend">Gửi ↗</button><button id="reportCancel">Huỷ</button></div></div>
 
 <div class="card" id="c1"><h2><span class="num">1</span>Cài ví farm</h2>
 <div class="hint">Dán <b>private key của ví farm riêng</b> (không dùng ví chính). Key chỉ lưu trên máy này, không gửi đi đâu.</div>
@@ -166,6 +173,10 @@ $("farm").onclick=()=>farm(false);$("dry").onclick=()=>farm(true);
 $("schedOn").onclick=async()=>{try{const r=await api("/api/schedule",{on:true});toast(r.ok?"Đã bật tự chạy":"Lỗi: "+r.error);await loadInfo();if(r.text)$("schedMsg").textContent=r.text}catch(e){toast(e.message)}};
 $("schedOff").onclick=async()=>{try{await api("/api/schedule",{on:false});toast("Đã tắt tự chạy");loadInfo()}catch(e){toast(e.message)}};
 $("tgSave").onclick=async()=>{try{const r=await api("/api/telegram",{token:$("tgToken").value.trim(),chat:$("tgChat").value.trim()});toast(r.message||"Đã lưu")}catch(e){toast(e.message)}};
+$("reportBtn").onclick=()=>{$("reportCard").style.display="";$("reportCard").scrollIntoView({behavior:"smooth"});$("reportText").focus()};
+$("reportCancel").onclick=()=>{$("reportCard").style.display="none"};
+$("reportSend").onclick=async()=>{try{const r=await api("/api/report",{kind:document.querySelector('input[name="rk"]:checked').value,text:$("reportText").value,withLogs:$("withLogs").checked});
+  $("reportCard").style.display="none";$("reportText").value="";toast("Đã mở GitHub — bấm Submit để gửi");}catch(e){toast(e.message)}};
 $("quit").onclick=async()=>{try{await api("/api/quit",{})}catch(e){}document.body.innerHTML='<div class="wrap"><h1>👋 Đã tắt tool</h1><p class="sub">Lịch tự chạy (nếu đã bật) vẫn hoạt động. Mở lại tool bất cứ lúc nào.</p></div>'};
 setInterval(()=>api("/api/info").catch(()=>{}),60000);
 loadInfo().then(loadStatus);

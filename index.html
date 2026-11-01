@@ -476,7 +476,7 @@ function toolPanel(i){
   const batch=t.mode==="batch";
   return `<div class="toolbox"><div class="tt">🤖 ${esc(t.name||"Tool")} · v${esc(t.version||"")} · ${batch?"⚙️ Batch":"🖥️ Giao diện"}</div>
     ${t.notes?`<div class="tn">${esc(t.notes)}</div>`:""}
-    ${L?`<a class="dl" href="${esc(L)}">⬇️ Tải cho Linux</a>`:""}${W?`<a class="dl" href="${esc(W)}">⬇️ Tải cho Windows</a>`:""}
+    ${L?`<a class="dl" href="${esc(L)}">⬇️ Tải cho Linux</a>`:""}${W?`<a class="dl" href="${esc(W)}">⬇️ Tải cho Windows</a>`:""}<button class="req" data-bug="${i.id}" style="vertical-align:top;margin-top:2px">🐞 Báo lỗi / Góp ý</button>
     <div class="hint">${batch?"Giải nén → mở app (Windows: nháy đúp; Linux: chuột phải thư mục → Open in Terminal → ./ltfarm-"+esc(t.id||"")+") → menu chữ: 1 dán key → 2 kiểm tra → 3 farm thử → 6 bật tự chạy.":"Giải nén → <b>nháy đúp</b> app → giao diện tự mở trên trình duyệt → làm 4 bước: dán key ví farm → xin gas → farm thử → bật tự chạy."} Key chỉ lưu trên máy bạn.${R?` · <a href="${esc(R)}" target="_blank" rel="noopener" style="color:var(--acc2)">Trang phát hành ↗</a>`:""}</div></div>`;
 }
 /* ---------- MetaMask: kết nối ví + thêm mạng 1 click (chỉ đọc địa chỉ, KHÔNG ký giao dịch) ---------- */
@@ -665,21 +665,28 @@ $("addBtn").onclick=()=>openItem(null);
 let reqItem=null,reqType="Tool";
 function openReq(type,item){
   reqType=type;reqItem=item||null;
-  $("rTitle").textContent=type==="Tool"?"🤖 Nhờ Claude viết tool":"💡 Đề xuất kèo mới";
-  $("rIntro").textContent=type==="Tool"?("Kèo: "+(item?item.name:"")+(item&&item.chain?" · "+item.chain:"")):"Claude sẽ kiểm tra kèo có thật không, có rủi ro scam không, rồi thêm vào danh sách nếu ổn.";
-  $("rNameRow").style.display=type==="Tool"?"none":"";
-  $("rOsRow").style.display=type==="Tool"?"":"none";
+  const tl=item&&toolOf(item);
+  $("rTitle").textContent=type==="Tool"?"🤖 Nhờ Claude viết tool":type==="Bug"?"🐞 Báo lỗi / Góp ý tool":"💡 Đề xuất kèo mới";
+  $("rIntro").textContent=type==="Tool"?("Kèo: "+(item?item.name:"")+(item&&item.chain?" · "+item.chain:"")):type==="Bug"?((tl?tl.name+" v"+tl.version:"")+" — mẹo: trong app tool cũng có nút 🐞, gửi từ đó sẽ kèm sẵn nhật ký lỗi."):"Claude sẽ kiểm tra kèo có thật không, có rủi ro scam không, rồi thêm vào danh sách nếu ổn.";
+  $("rNameRow").style.display=type==="Kèo"?"":"none";
+  $("rOsRow").style.display=type==="Kèo"?"none":"";
   $("rModeRow").style.display=type==="Tool"?"":"none";
+  $("rOsRow").querySelector("label").textContent=type==="Bug"?"Lỗi xảy ra trên máy nào?":"Tool chạy trên máy nào?";
   const dm=document.querySelector('input[name="rMode"][value="Giao diện"]');if(dm)dm.checked=true;
   const def=document.querySelector('input[name="rOs"][value="Cả hai"]');if(def)def.checked=true;
-  $("rWhatLabel").textContent=type==="Tool"?"Bạn muốn tool làm gì? (vd: tự swap, tự check-in, tự mint NFT…)":"Bạn thấy kèo này ở đâu / có gì đáng chú ý?";
+  $("rWhatLabel").textContent=type==="Tool"?"Bạn muốn tool làm gì? (vd: tự swap, tự check-in, tự mint NFT…)":type==="Bug"?"Bạn bấm gì, thấy lỗi gì / muốn tool có thêm gì? (có ảnh chụp thì dán vào GitHub sau)":"Bạn thấy kèo này ở đâu / có gì đáng chú ý?";
   $("rName").value="";$("rWhat").value="";$("rLink").value=item?(item.x||item.web||""):"";
   updateReqLink();$("mReq").classList.add("open");
 }
 function updateReqLink(){
-  const name=reqType==="Tool"?(reqItem?reqItem.name:""):$("rName").value.trim();
+  const tl=reqItem&&toolOf(reqItem);
+  const name=reqType==="Kèo"?$("rName").value.trim():(reqType==="Bug"&&tl?tl.name+" v"+tl.version:(reqItem?reqItem.name:""));
   const title=`[${reqType}] ${name||"..."}`;
-  const lines=reqType==="Tool"?[
+  const os=(document.querySelector('input[name="rOs"]:checked')||{}).value||"Cả hai";
+  const lines=reqType==="Bug"?[
+    "### Lỗi gặp phải / góp ý",$("rWhat").value.trim()||"(chưa ghi)","","### Thông tin","- Tool: `"+(tl?tl.id:"")+"` v"+(tl?tl.version:"")+" ("+(tl&&tl.mode||"gui")+")","- Máy: "+os,"- Kèo: "+(reqItem?reqItem.name:""),
+    "","---","_Gửi từ Airdrop Tracker. Kéo thả ảnh chụp màn hình vào ô này nếu có._"
+  ]:reqType==="Tool"?[
     "### Kèo","- Tên: "+name,"- id: `"+(reqItem?reqItem.id:"")+"`","- Mạng: "+(reqItem?reqItem.chain:""),
     "","### Nền tảng",(document.querySelector('input[name="rOs"]:checked')||{}).value||"Cả hai",
     "","### Kiểu app",(document.querySelector('input[name="rMode"]:checked')||{}).value||"Giao diện",
@@ -690,7 +697,8 @@ function updateReqLink(){
     "","---","_Gửi từ Airdrop Tracker. Claude kiểm tra vào sáng thứ Hai._"
   ];
   const ok=!!repoSlug&&!!name;
-  $("rSend").href=ok?`https://github.com/${repoSlug}/issues/new?title=${encodeURIComponent(title)}&labels=${reqType==="Tool"?"tool-request":"keo-request"}&body=${encodeURIComponent(lines.join("\n"))}`:"#";
+  const label=reqType==="Tool"?"tool-request":reqType==="Bug"?"bug":"keo-request";
+  $("rSend").href=ok?`https://github.com/${repoSlug}/issues/new?title=${encodeURIComponent(title)}&labels=${label}&body=${encodeURIComponent(lines.join("\n"))}`:"#";
   $("rSend").style.opacity=ok?1:.5;
 }
 ["rName","rWhat","rLink"].forEach(id=>$(id).addEventListener("input",updateReqLink));
@@ -736,8 +744,9 @@ document.addEventListener("click",async e=>{
   if(e.target.closest("#loginBtn")){loginCloud();return}
   if(e.target.closest("#logoutBtn")){logoutCloud(false);return}
   const nb=e.target.closest("[data-net]");if(nb){e.preventDefault();addNetwork(state.items.find(x=>x.id===nb.dataset.net));return}
-  const t=e.target.closest("[data-f],[data-edit],[data-copy],[data-delw],[data-req]");if(!t)return;
+  const t=e.target.closest("[data-f],[data-edit],[data-copy],[data-delw],[data-req],[data-bug]");if(!t)return;
   if(t.dataset.req){openReq("Tool",state.items.find(x=>x.id===t.dataset.req));return}
+  if(t.dataset.bug){openReq("Bug",state.items.find(x=>x.id===t.dataset.bug));return}
   if(t.dataset.f){filter=t.dataset.f;render()}
   else if(t.dataset.edit)openItem(t.dataset.edit);
   else if(t.dataset.copy){try{await navigator.clipboard.writeText(t.dataset.copy);toast("Đã copy địa chỉ")}catch(err){toast("Không copy được")}}

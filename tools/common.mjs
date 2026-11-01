@@ -1,7 +1,7 @@
 // Khung dùng chung cho mọi tool farm của Airdrop Tracker.
 // Mỗi tool được đóng gói thành 1 file chạy (Linux / Windows), mở lên là có menu tiếng Việt.
 // Mọi dữ liệu (ví, trạng thái, nhật ký) chỉ nằm trên máy người dùng.
-import { readFileSync, writeFileSync, mkdirSync, appendFileSync, existsSync, rmSync, chmodSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync, existsSync, rmSync, chmodSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import os from "node:os";
 import { execFileSync } from "node:child_process";
@@ -138,7 +138,8 @@ export async function runApp(tool) {
     },
     provider() {
       const rpc = process.env[`${tool.chain.key.toUpperCase()}_RPC`] || tool.chain.rpc;
-      return new ethers.JsonRpcProvider(rpc, tool.chain.chainId, { staticNetwork: true });
+      // batchMaxCount 1: nhiều RPC testnet không nhận yêu cầu gộp (batch) → gửi từng yêu cầu một
+      return new ethers.JsonRpcProvider(rpc, tool.chain.chainId, { staticNetwork: true, batchMaxCount: 1 });
     },
     wallet() {
       const pk = (loadCfg().privateKey || "").trim();
@@ -243,7 +244,14 @@ export async function runApp(tool) {
         return { platform: isWin ? "Windows" : "Linux", address: cfg.privateKey ? new ethers.Wallet(cfg.privateKey).address : null,
           faucet: tool.chain.faucet, explorer: tool.chain.explorer, dir, schedule: { on: !st.startsWith("đang tắt"), text: st.startsWith("đang tắt") ? "" : "Lịch: " + st } };
       },
-      status: async () => { try { return await statusData(); } catch (e) { throw new Error(e.shortMessage || e.message); } },
+      status: async () => {
+        try { return await statusData(); }
+        catch (e) {
+          const msg = e.shortMessage || e.info?.error?.message || e.error?.message || e.message || String(e);
+          ctx.log("status_error", { error: String(msg).slice(0, 300), code: e.code });
+          throw new Error(/timeout|ETIMEDOUT|ENOTFOUND|ECONNREFUSED|network/i.test(msg) ? "Không kết nối được RPC (mạng chậm hoặc bị chặn) — thử lại sau" : String(msg).slice(0, 200));
+        }
+      },
       setKey: (k) => {
         const pk = k.trim().startsWith("0x") ? k.trim() : "0x" + k.trim();
         if (!/^0x[0-9a-fA-F]{64}$/.test(pk)) return { error: "Key không đúng định dạng (64 ký tự hex). Kiểm tra lại, đừng dán seed phrase 12 từ." };
@@ -256,6 +264,30 @@ export async function runApp(tool) {
         writeJson(CFG, { ...loadCfg(), telegram: token ? { token, chat } : undefined }, true);
         if (!token) return { message: "Đã tắt Telegram" };
         await ctx.telegram(`🔔 ${tool.name} đã kết nối Telegram`); return { message: "Đã lưu — kiểm tra Telegram xem có tin thử chưa" };
+      },
+      report: ({ kind, text, withLogs }) => {
+        // Soạn issue báo lỗi / góp ý — ẩn mọi thứ nhạy cảm trước khi gửi
+        const hide = (x) => String(x).replace(/0x[0-9a-fA-F]{64}/g, "0x[ẩn]").replace(/\b[0-9a-fA-F]{64}\b/g, "[ẩn]").replace(/0x([0-9a-fA-F]{4})[0-9a-fA-F]{32}([0-9a-fA-F]{4})/g, "0x$1…$2");
+        const s = ctx.state();
+        let logs = "";
+        if (withLogs) {
+          try {
+            const files = existsSync(LOGS) ? readdirSync(LOGS).filter((f) => f.endsWith(".jsonl")).sort().slice(-2) : [];
+            const lines = files.flatMap((f) => readFileSync(join(LOGS, f), "utf8").trim().split("\n")).slice(-25);
+            logs = hide(lines.join("\n")).slice(-3500);
+          } catch {}
+        }
+        const isBug = kind !== "idea";
+        const title = `[${isBug ? "Bug" : "Góp ý"}] ${tool.name} v${tool.version}`;
+        const body = [
+          `### ${isBug ? "Lỗi gặp phải" : "Góp ý"}`, hide(text || "(chưa ghi)"), "",
+          "### Thông tin", `- Tool: \`${tool.id}\` v${tool.version} (${tool.mode || "gui"})`, `- Máy: ${isWin ? "Windows" : "Linux"} ${os.release()} · ${process.arch}`,
+          s.last ? `- Lần farm gần nhất: ${s.last.at} — ${s.last.skipped ? "nghỉ" : s.last.ok ? "OK " + s.last.txCount + " tx" : "LỖI: " + hide(s.last.error || "")}` : "- Chưa farm lần nào",
+          ...(logs ? ["", "<details><summary>Nhật ký gần nhất (đã ẩn ví/key)</summary>", "", "```", logs, "```", "</details>"] : []),
+          "", "---", "_Gửi từ app tool. Có ảnh chụp màn hình thì kéo thả vào ô này._",
+        ].join("\n");
+        const repo = tool.repo || "phuclt093/LT_AirdropTracker";
+        return { url: `https://github.com/${repo}/issues/new?title=${encodeURIComponent(title)}&labels=${isBug ? "bug" : "enhancement"}&body=${encodeURIComponent(body)}` };
       },
       setSettings: (b) => { const c = loadCfg(); c.settings = { ...(c.settings || {}), ...b }; writeJson(CFG, c, true); return { ok: true }; },
     });
