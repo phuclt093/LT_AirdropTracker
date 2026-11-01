@@ -263,6 +263,9 @@ ol.gsteps .gdone input{width:16px;height:16px;accent-color:var(--acc);padding:0;
     <div class="f" id="rNameRow"><label>Tên dự án *</label><input id="rName" placeholder="vd: Pharos"></div>
     <div class="f" id="rOsRow"><label>Tool chạy trên máy nào?</label>
       <div class="osrow"><label><input type="radio" name="rOs" value="Cả hai" checked>🐧 + 🪟 Cả hai</label><label><input type="radio" name="rOs" value="Linux">🐧 Linux</label><label><input type="radio" name="rOs" value="Windows">🪟 Windows</label></div></div>
+    <div class="f" id="rModeRow"><label>Kiểu app</label>
+      <div class="osrow"><label><input type="radio" name="rMode" value="Giao diện" checked>🖥️ Giao diện trực quan</label><label><input type="radio" name="rMode" value="Batch">⚙️ Batch (dòng lệnh, chạy ngầm)</label></div>
+      <div class="hint" style="margin-top:4px">Giao diện: nháy đúp là mở trang bấm nút, hợp người dùng phổ thông. Batch: cửa sổ dòng lệnh, gọn nhẹ, hợp chạy ngầm hoặc tự gọi bằng script.</div></div>
     <div class="f"><label id="rWhatLabel">Bạn muốn tool làm gì?</label><textarea id="rWhat" rows="4"></textarea></div>
     <div class="f"><label>Link chính thức (nếu có)</label><input id="rLink" placeholder="https://x.com/... hoặc docs"></div>
     <div class="hint">Bấm gửi sẽ mở GitHub để tạo yêu cầu (issue). Sáng thứ Hai Claude viết tool, đóng gói thành app và đưa lên mục Tải về — kèo đó sẽ có nút ⬇️ Tải tool.</div>
@@ -470,10 +473,11 @@ function toolOf(i){const r=repoById[i.id];return r&&r.tool&&r.tool.downloads?r.t
 function toolPanel(i){
   const t=toolOf(i);if(!t)return "";
   const L=safeUrl(t.downloads.linux),W=safeUrl(t.downloads.windows),R=safeUrl(t.release);
-  return `<div class="toolbox"><div class="tt">🤖 ${esc(t.name||"Tool")} · v${esc(t.version||"")}</div>
+  const batch=t.mode==="batch";
+  return `<div class="toolbox"><div class="tt">🤖 ${esc(t.name||"Tool")} · v${esc(t.version||"")} · ${batch?"⚙️ Batch":"🖥️ Giao diện"}</div>
     ${t.notes?`<div class="tn">${esc(t.notes)}</div>`:""}
     ${L?`<a class="dl" href="${esc(L)}">⬇️ Tải cho Linux</a>`:""}${W?`<a class="dl" href="${esc(W)}">⬇️ Tải cho Windows</a>`:""}
-    <div class="hint">Giải nén → mở app → chọn <b>1</b> dán private key ví farm → <b>2</b> kiểm tra → <b>6</b> bật tự chạy mỗi ngày. Key chỉ lưu trên máy bạn.${R?` · <a href="${esc(R)}" target="_blank" rel="noopener" style="color:var(--acc2)">Trang phát hành ↗</a>`:""}</div></div>`;
+    <div class="hint">${batch?"Giải nén → mở app (Windows: nháy đúp; Linux: chuột phải thư mục → Open in Terminal → ./ltfarm-"+esc(t.id||"")+") → menu chữ: 1 dán key → 2 kiểm tra → 3 farm thử → 6 bật tự chạy.":"Giải nén → <b>nháy đúp</b> app → giao diện tự mở trên trình duyệt → làm 4 bước: dán key ví farm → xin gas → farm thử → bật tự chạy."} Key chỉ lưu trên máy bạn.${R?` · <a href="${esc(R)}" target="_blank" rel="noopener" style="color:var(--acc2)">Trang phát hành ↗</a>`:""}</div></div>`;
 }
 /* ---------- MetaMask: kết nối ví + thêm mạng 1 click (chỉ đọc địa chỉ, KHÔNG ký giao dịch) ---------- */
 let mm={account:null,chainId:null};
@@ -665,6 +669,8 @@ function openReq(type,item){
   $("rIntro").textContent=type==="Tool"?("Kèo: "+(item?item.name:"")+(item&&item.chain?" · "+item.chain:"")):"Claude sẽ kiểm tra kèo có thật không, có rủi ro scam không, rồi thêm vào danh sách nếu ổn.";
   $("rNameRow").style.display=type==="Tool"?"none":"";
   $("rOsRow").style.display=type==="Tool"?"":"none";
+  $("rModeRow").style.display=type==="Tool"?"":"none";
+  const dm=document.querySelector('input[name="rMode"][value="Giao diện"]');if(dm)dm.checked=true;
   const def=document.querySelector('input[name="rOs"][value="Cả hai"]');if(def)def.checked=true;
   $("rWhatLabel").textContent=type==="Tool"?"Bạn muốn tool làm gì? (vd: tự swap, tự check-in, tự mint NFT…)":"Bạn thấy kèo này ở đâu / có gì đáng chú ý?";
   $("rName").value="";$("rWhat").value="";$("rLink").value=item?(item.x||item.web||""):"";
@@ -676,6 +682,7 @@ function updateReqLink(){
   const lines=reqType==="Tool"?[
     "### Kèo","- Tên: "+name,"- id: `"+(reqItem?reqItem.id:"")+"`","- Mạng: "+(reqItem?reqItem.chain:""),
     "","### Nền tảng",(document.querySelector('input[name="rOs"]:checked')||{}).value||"Cả hai",
+    "","### Kiểu app",(document.querySelector('input[name="rMode"]:checked')||{}).value||"Giao diện",
     "","### Muốn tool làm gì",$("rWhat").value.trim()||"(chưa ghi)","","### Link",$("rLink").value.trim()||"(chưa có)",
     "","---","_Gửi từ Airdrop Tracker. Claude xử lý vào sáng thứ Hai và mở Pull Request._"
   ]:[
@@ -687,7 +694,7 @@ function updateReqLink(){
   $("rSend").style.opacity=ok?1:.5;
 }
 ["rName","rWhat","rLink"].forEach(id=>$(id).addEventListener("input",updateReqLink));
-document.querySelectorAll('input[name="rOs"]').forEach(r=>r.addEventListener("change",updateReqLink));
+document.querySelectorAll('input[name="rOs"],input[name="rMode"]').forEach(r=>r.addEventListener("change",updateReqLink));
 $("rSend").addEventListener("click",e=>{if($("rSend").getAttribute("href")==="#"){e.preventDefault();return}
   if(reqItem)requests[reqItem.name.toLowerCase()]={type:reqType,url:"https://github.com/"+repoSlug+"/issues"};
   setTimeout(()=>{$("mReq").classList.remove("open");render();toast("Đã mở GitHub — bấm Submit để gửi")},300)});

@@ -23,12 +23,20 @@ for (const p of platforms) {
   if (!TARGET[p]) { console.error("Nền tảng không hỗ trợ: " + p); process.exit(2); }
   const exe = join(out, p === "windows" ? `ltfarm-${id}.exe` : `ltfarm-${id}`);
   console.log(`\n▶ Đóng gói ${meta.name} v${meta.version} cho ${p}`);
-  run(bun, ["build", "--compile", "--minify", `--target=${TARGET[p]}`, join(id, "app.mjs"), "--outfile", exe]);
-  const readme = `${meta.name} v${meta.version}\n\n${meta.notes || ""}\n\nCÁCH DÙNG\n` +
-    (p === "windows"
-      ? `1. Giải nén, nháy đúp ltfarm-${id}.exe (Windows có thể cảnh báo "Windows protected your PC" vì app chưa ký: bấm More info → Run anyway).\n`
-      : `1. Giải nén, mở Terminal tại thư mục này, chạy: ./ltfarm-${id}\n`) +
-    `2. Chọn 1 → dán private key của VÍ FARM RIÊNG (không dùng ví chính).\n3. Xin gas ở faucet, chọn 2 để kiểm tra, chọn 3 để farm thử.\n4. Chọn 6 để tool tự chạy mỗi ngày. Đừng di chuyển file sau khi bật.\n\nDữ liệu (ví, nhật ký) chỉ lưu trên máy bạn: ${p === "windows" ? "%APPDATA%\\LTFarm\\" + id : "~/.config/ltfarm/" + id}\n`;
+  // Windows: ẩn cửa sổ đen — app chỉ hiện giao diện trên trình duyệt
+  run(bun, ["build", "--compile", "--minify", `--target=${TARGET[p]}`, ...(p === "windows" && meta.mode !== "batch" ? ["--windows-hide-console"] : []), join(id, "app.mjs"), "--outfile", exe]);
+  const batch = meta.mode === "batch";
+  const readme = `${meta.name} v${meta.version} (${batch ? "Batch — dòng lệnh" : "Giao diện"})\n\n${meta.notes || ""}\n\nCÁCH DÙNG\n` +
+    (batch
+      ? (p === "windows"
+        ? `1. Giải nén, nháy đúp ltfarm-${id}.exe → cửa sổ dòng lệnh hiện menu.\n   Nếu Windows báo "Windows protected your PC": bấm More info → Run anyway.\n`
+        : `1. Giải nén. Chuột phải vào chỗ trống trong thư mục → "Open in Terminal" → gõ ./ltfarm-${id} rồi Enter.\n   Lần đầu mở, app tự thêm vào danh sách ứng dụng (bấm phím Super, gõ "farm").\n`) +
+        `2. Menu: 1 dán private key VÍ FARM RIÊNG → 2 kiểm tra → 3 farm thử → 6 bật tự chạy mỗi ngày.\n   Dùng trong script: ltfarm-${id} --farm (chạy 1 lần), --status (xem tình trạng), --gui (mở giao diện).\n`
+      : (p === "windows"
+        ? `1. Giải nén, nháy đúp ltfarm-${id}.exe.\n   Nếu Windows báo "Windows protected your PC" (vì app chưa ký số): bấm More info → Run anyway.\n`
+        : `1. Giải nén, nháy đúp file ltfarm-${id}.\n   Nếu nháy đúp không có gì xảy ra: chuột phải file → Properties → bật "Executable as Program" rồi nháy đúp lại.\n   Lần đầu mở, app tự thêm biểu tượng vào danh sách ứng dụng (bấm phím Super, gõ "farm").\n`) +
+        `2. Giao diện tool tự mở trên trình duyệt. Làm lần lượt 4 bước:\n   ① Dán private key VÍ FARM RIÊNG  ② Xin gas ở faucet, bấm Làm mới  ③ Farm ngay  ④ Bật tự chạy mỗi ngày\n3. Xong bấm "Thoát". Lịch tự chạy vẫn hoạt động.\n   (Muốn dùng menu chữ: chạy kèm --cli)\n`) +
+    `\nDữ liệu (ví, nhật ký) chỉ lưu trên máy bạn: ${p === "windows" ? "%APPDATA%\\LTFarm\\" + id : "~/.config/ltfarm/" + id}\n`;
   const readmeFile = join(out, `HUONG-DAN-${p}.txt`);
   execFileSync("python3", ["-c", "import sys;open(sys.argv[1],'w',encoding='utf-8').write(sys.argv[2])", readmeFile, readme]);
   if (p === "windows") {

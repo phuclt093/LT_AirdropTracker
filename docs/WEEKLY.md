@@ -69,7 +69,8 @@ Tool là **app độc lập** chạy trên máy người dùng, không chạy tr
 3. Tạo `tools/<id>/tool.json` theo mẫu `tools/arc/tool.json`:
    - `id`, `name` (tiếng Việt), `version` (bắt đầu `1.0.0`, sửa tool thì tăng), `keo` (id kèo trong `airdrops.json`), `chain` (key mạng nếu khác `id`), `notes` (1–2 câu tool làm gì, cần chuẩn bị gì),
    - `platforms`: `["linux"]`, `["windows"]` hoặc `["linux","windows"]` **đúng theo mục Nền tảng trong issue**.
-4. Tạo `tools/<id>/app.mjs` theo khuôn `tools/arc/app.mjs`: viết hàm `farm(ctx)` (và `status` nếu cần), rồi gọi `runApp(...)` từ `tools/common.mjs`. Khung đã lo sẵn menu tiếng Việt, cài ví, lịch chạy tự động (systemd / Task Scheduler), Telegram, khoá chống chạy trùng, nhật ký.
+   - `mode`: `"gui"` (giao diện trực quan, mặc định) hoặc `"batch"` (menu chữ trong cửa sổ dòng lệnh, có tham số `--farm` / `--status` để gọi từ script) **đúng theo mục Kiểu app trong issue**. Cả hai kiểu dùng chung một `app.mjs`, chỉ khác `mode`.
+4. Tạo `tools/<id>/app.mjs` theo khuôn `tools/arc/app.mjs`: viết hàm `farm(ctx)` (và `status` nếu cần), rồi gọi `runApp(...)` từ `tools/common.mjs`. Khung đã lo sẵn **giao diện đồ hoạ** (nháy đúp là mở trên trình duyệt, 4 bước: cài ví → xin gas → farm thử → bật tự chạy), lịch chạy tự động (systemd / Task Scheduler), Telegram, khoá chống chạy trùng, nhật ký. Muốn hiện thêm số liệu trên giao diện thì viết `extra(ctx, address)` trả về `[{label, value}]`. Với `mode: "gui"` thì **không bao giờ** bắt người dùng mở terminal.
    - Bên trong `farm`: kiểm tra chainId và số dư tối thiểu (báo đi xin faucet), làm 2–4 hành động ngẫu nhiên, có nghỉ giữa chừng (đọc `ctx.setting(...)`; `LTFARM_FAST` thì nghỉ 1–2s), mỗi giao dịch thử lại 1 lần, tôn trọng `ctx.dry`, trả về `{ ok, txCount, actions, error? }`.
    - Chỉ dùng hành động on-chain an toàn: chuyển cho chính mình, approve, swap nhỏ trên DEX **chính thức**, mint/faucet contract công khai, deploy contract nhỏ. Không gửi tiền tới địa chỉ lạ.
 5. **Test bắt buộc trước khi phát hành:**
@@ -80,7 +81,7 @@ Tool là **app độc lập** chạy trên máy người dùng, không chạy tr
    ```
    Tool gọi contract đặc biệt (router DEX…) thì khai báo mock trong `chains.<key>.mocks` (`{ "<address>": "<solidity source của contract M>" }`).
 6. **Phát hành:** `bash tools/publish.sh <id>`. Script đóng gói, tạo GitHub Release `tool-<id>-v<version>`, rồi ghi field `tool` (link tải) vào `airdrops.json`. Không có quyền tạo release thì vẫn commit mã nguồn trong PR, ghi rõ trong PR là chủ repo cần chạy `bash tools/publish.sh <id>` sau khi merge.
-7. Trong `guide` của kèo, thêm 1 bước "Tải tool": bấm ⬇️ → giải nén → mở app → 1 (dán key) → 2 (kiểm tra) → 6 (bật tự chạy). Nhắc cảnh báo SmartScreen trên Windows ("More info → Run anyway").
+7. Trong `guide` của kèo, thêm 1 bước "Tải tool": bấm ⬇️ → giải nén → nháy đúp → làm 4 bước trên giao diện. Nhắc cảnh báo SmartScreen trên Windows ("More info → Run anyway") và cách bật "Executable as Program" trên Linux nếu nháy đúp không chạy.
 
 ## Định dạng `data/weekly.json`
 

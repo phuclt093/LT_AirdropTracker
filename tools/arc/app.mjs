@@ -75,11 +75,9 @@ async function farm(ctx) {
   return { ok, txCount: done.filter((d) => d.ok).length, actions: done, ...(error ? { error } : {}) };
 }
 
-async function status(ctx, address) {
-  try {
-    const c = new ethers.Contract(chain.tokens.EURC.address, ERC20, ctx.provider());
-    console.log(`EURC: ${Number(ethers.formatUnits(await c.balanceOf(address), 6))}`);
-  } catch {}
+async function extra(ctx, address) {
+  const c = new ethers.Contract(chain.tokens.EURC.address, ERC20, ctx.provider());
+  return [{ label: "EURC", value: Number(Number(ethers.formatUnits(await c.balanceOf(address), 6)).toFixed(2)) }];
 }
 
-await runApp({ ...meta, chain, farm, status });
+await runApp({ ...meta, chain, farm, extra });

@@ -38,7 +38,8 @@ if os.path.exists(f"dist/{i}/ltfarm-{i}-windows-x64.zip"): dl["windows"]=base+f"
 found=False
 for a in d["airdrops"]:
     if a["id"]==keo:
-        a["tool"]={"id":i,"name":name,"version":ver,"notes":notes,"downloads":dl,"release":f"https://github.com/{repo}/releases/tag/{tag}"}
+        mode=json.load(open(f"{i}/tool.json",encoding="utf-8")).get("mode","gui")
+        a["tool"]={"id":i,"name":name,"version":ver,"mode":mode,"notes":notes,"downloads":dl,"release":f"https://github.com/{repo}/releases/tag/{tag}"}
         found=True
 if not found: sys.exit(f"Không thấy kèo {keo} trong airdrops.json")
 json.dump(d,open(p,'w',encoding='utf-8'),ensure_ascii=False,indent=2); open(p,'a').write("\n")

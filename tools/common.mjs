@@ -7,6 +7,7 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import readline from "node:readline";
 import { ethers } from "ethers";
+import { startGui } from "./gui.mjs";
 
 export const isWin = process.platform === "win32";
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -92,7 +93,7 @@ function installSchedule(id, title) {
   let linger = "";
   try { linger = execFileSync("loginctl", ["show-user", os.userInfo().username, "-p", "Linger", "--value"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch {}
   return "Đã bật lịch systemd: mỗi ngày 1 lần, giờ ngẫu nhiên 8h–20h." +
-    (linger === "yes" ? "" : `\n${C.y("Để chạy cả khi bạn chưa đăng nhập máy, chạy 1 lần:")} sudo loginctl enable-linger ${os.userInfo().username}`);
+    (linger === "yes" ? "" : `\n(Tuỳ chọn, không bắt buộc) Tool chạy khi bạn đã đăng nhập vào máy. Muốn chạy cả khi máy bật mà chưa ai đăng nhập: mở Terminal gõ 1 lần  sudo loginctl enable-linger ${os.userInfo().username}`);
 }
 function removeSchedule(id) {
   const n = scheduleName(id);
@@ -114,9 +115,9 @@ function scheduleStatus(id) {
 
 /**
  * Chạy app. tool = {
- *   id, name, version, chain (từ chains.mjs),
+ *   id, name, version, chain (từ chains.mjs), mode: "gui" (mặc định, giao diện trình duyệt) | "batch" (menu chữ trong cửa sổ dòng lệnh),
  *   farm(ctx) → { ok, txCount, actions:[{type,ok}], error?, skipped? },
- *   status(ctx) → in thêm thông tin riêng (tuỳ chọn)
+ *   extra(ctx, address) → [{label, value}] số liệu riêng của tool (tuỳ chọn)
  * }
  */
 export async function runApp(tool) {
@@ -132,7 +133,7 @@ export async function runApp(tool) {
     saveState: (s) => writeJson(STATE, s),
     log(kind, obj = {}) {
       const line = JSON.stringify({ t: new Date().toISOString(), kind, ...obj });
-      if (process.env.LTFARM_VERBOSE || !process.stdout.isTTY) console.log(line);
+      if (!ctx.quiet && (process.env.LTFARM_VERBOSE || !process.stdout.isTTY)) console.log(line);
       try { mkdirSync(LOGS, { recursive: true }); appendFileSync(join(LOGS, `${todayVN()}.jsonl`), line + "\n"); } catch {}
     },
     provider() {
@@ -189,7 +190,7 @@ export async function runApp(tool) {
       const b = Number(ethers.formatUnits(bal, tool.chain.nativeDecimals));
       console.log(`Số dư: ${b} ${tool.chain.nativeSymbol}   ·   Đã gửi: ${nonce} giao dịch`);
       if (b < Number(ctx.setting("minBalance", 1))) console.log(C.y(`⚠️  Sắp hết gas — xin thêm tại ${tool.chain.faucet}`));
-      if (tool.status) await tool.status(ctx, w.address);
+      if (tool.extra) for (const x of await tool.extra(ctx, w.address)) console.log(`${x.label}: ${x.value}`);
     } catch (e) { console.log(C.r("Không đọc được số liệu từ mạng: " + (e.shortMessage || e.message))); }
     const days = (s.history || []).filter((h) => h.ok && h.tx > 0).map((h) => h.date);
     console.log(`Số ngày đã farm: ${new Set(days).size}`);
@@ -207,6 +208,58 @@ export async function runApp(tool) {
     if (argv.includes("--scheduled")) { const m = randInt(0, 12 * 60); ctx.log("scheduled_wait", { minutes: m }); await sleep(m * 60e3); }
     const r = await doFarm({ force: argv.includes("--force") });
     process.exit(r && !r.ok ? 1 : 0);
+  }
+
+  async function statusData() {
+    const cfg = loadCfg(); const s = ctx.state();
+    if (!cfg.privateKey) return { address: null };
+    const address = new ethers.Wallet(cfg.privateKey).address;
+    const p = ctx.provider();
+    const [bal, nonce] = await Promise.all([p.getBalance(address), p.getTransactionCount(address)]);
+    const balance = Number(Number(ethers.formatUnits(bal, tool.chain.nativeDecimals)).toFixed(4));
+    let extra = []; try { extra = tool.extra ? await tool.extra(ctx, address) : []; } catch {}
+    const days = new Set((s.history || []).filter((h) => h.ok && h.tx > 0).map((h) => h.date)).size;
+    return { address, balance, symbol: tool.chain.nativeSymbol, nonce, days, extra, last: s.last || null, low: balance < Number(ctx.setting("minBalance", 1)) };
+  }
+
+  // ---------- Linux: biểu tượng trong danh sách ứng dụng (nháy là mở giao diện) ----------
+  if (!isWin && !process.env.LTFARM_HOME && !process.env.LTFARM_NO_DESKTOP) {
+    try {
+      const appsDir = join(os.homedir(), ".local", "share", "applications");
+      const desk = join(appsDir, `ltfarm-${tool.id}.desktop`);
+      const want = `[Desktop Entry]\nType=Application\nName=${tool.name}\nComment=Airdrop Tracker — tool farm\nExec="${exePath()}"\nTerminal=${tool.mode === "batch" ? "true" : "false"}\nIcon=${tool.mode === "batch" ? "utilities-terminal" : "applications-internet"}\nCategories=Utility;\n`;
+      if ((existsSync(desk) ? readFileSync(desk, "utf8") : "") !== want) { mkdirSync(appsDir, { recursive: true }); writeFileSync(desk, want); try { chmodSync(desk, 0o755); } catch {} }
+    } catch {}
+  }
+
+  // ---------- mặc định: giao diện đồ hoạ trên trình duyệt (--cli để dùng menu chữ) ----------
+  const wantGui = argv.includes("--gui") || (!argv.includes("--cli") && tool.mode !== "batch");
+  if (wantGui) {
+    ctx.quiet = true; // giao diện chỉ hiện dòng dễ đọc, nhật ký chi tiết vẫn ghi vào thư mục logs
+    await startGui({
+      tool, isWin,
+      info: () => {
+        const cfg = loadCfg(); const st = scheduleStatus(tool.id);
+        return { platform: isWin ? "Windows" : "Linux", address: cfg.privateKey ? new ethers.Wallet(cfg.privateKey).address : null,
+          faucet: tool.chain.faucet, explorer: tool.chain.explorer, dir, schedule: { on: !st.startsWith("đang tắt"), text: st.startsWith("đang tắt") ? "" : "Lịch: " + st } };
+      },
+      status: async () => { try { return await statusData(); } catch (e) { throw new Error(e.shortMessage || e.message); } },
+      setKey: (k) => {
+        const pk = k.trim().startsWith("0x") ? k.trim() : "0x" + k.trim();
+        if (!/^0x[0-9a-fA-F]{64}$/.test(pk)) return { error: "Key không đúng định dạng (64 ký tự hex). Kiểm tra lại, đừng dán seed phrase 12 từ." };
+        writeJson(CFG, { ...loadCfg(), privateKey: pk }, true);
+        return { ok: true, address: new ethers.Wallet(pk).address };
+      },
+      farm: async ({ dry }) => { ctx.dry = dry; try { return (await doFarm({ force: true })) || { ok: false, error: "Đang có lần farm khác chạy" }; } finally { ctx.dry = false; } },
+      schedule: (on) => { try { return { ok: true, text: on ? installSchedule(tool.id, tool.name).replace(/\x1b\[[0-9;]*m/g, "") : removeSchedule(tool.id) }; } catch (e) { return { ok: false, error: e.message }; } },
+      setTelegram: async (token, chat) => {
+        writeJson(CFG, { ...loadCfg(), telegram: token ? { token, chat } : undefined }, true);
+        if (!token) return { message: "Đã tắt Telegram" };
+        await ctx.telegram(`🔔 ${tool.name} đã kết nối Telegram`); return { message: "Đã lưu — kiểm tra Telegram xem có tin thử chưa" };
+      },
+      setSettings: (b) => { const c = loadCfg(); c.settings = { ...(c.settings || {}), ...b }; writeJson(CFG, c, true); return { ok: true }; },
+    });
+    return;
   }
 
   // ---------- menu ----------
