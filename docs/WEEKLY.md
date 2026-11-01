@@ -23,8 +23,34 @@ Tài liệu này là "sổ tay" cho buổi cập nhật tự động mỗi sáng
    - đội ngũ hoặc nhà đầu tư rõ ràng, có testnet đang chạy thật,
    - nguồn chính thức xác minh được (docs, X chính thức).
 3. **Dọn kèo cũ**: kèo đã TGE hoặc có snapshot thì đổi `status` (`wait` / `claim`), kèo chết thì `drop`. Ghi lý do trong `note`.
-4. **Viết `data/weekly.json`** (định dạng bên dưới): tóm tắt tuần và 3–6 bước cụ thể người dùng nên tự làm (quest, Discord, faucet…).
-5. **Mở 1 Pull Request duy nhất**, tên `Cập nhật tuần YYYY-MM-DD`. Trong PR ghi rõ: kèo thêm/bỏ (kèm nguồn), tool mới, những gì đã test. Comment link PR vào từng issue đã xử lý; issue nào làm xong thì ghi `Closes #N` trong mô tả PR.
+4. **Viết/cập nhật `guide` chi tiết** cho mọi kèo mới hoặc có thay đổi (xem mục bên dưới).
+5. **Viết `data/weekly.json`** (định dạng bên dưới): tóm tắt tuần và 3–6 bước cụ thể người dùng nên tự làm (quest, Discord, faucet…).
+6. **Mở 1 Pull Request duy nhất**, tên `Cập nhật tuần YYYY-MM-DD`. Trong PR ghi rõ: kèo thêm/bỏ (kèm nguồn), tool mới, những gì đã test. Comment link PR vào từng issue đã xử lý; issue nào làm xong thì ghi `Closes #N` trong mô tả PR.
+
+## Hướng dẫn chi tiết cho từng kèo (bắt buộc)
+
+Người dùng **mới chơi airdrop**, nên viết hướng dẫn chung chung kiểu "tương tác testnet" là không dùng được. Kèo nào thêm mới hoặc có thay đổi đều phải có field `guide` trong `airdrops.json`, hiện ở khung **📖 Hướng dẫn chi tiết** trên web:
+
+```json
+"guide": {
+  "updated": "YYYY-MM-DD",
+  "warn": "Cảnh báo quan trọng nhất: chưa có token, rủi ro, hạn chót, scam thường gặp…",
+  "steps": [
+    { "t": "Tiêu đề bước (động từ, ngắn)", "d": "Bấm gì, ở đâu, điền gì — đủ để làm theo mà không phải đoán. Dùng \n• cho danh sách.", "link": "https://link-chinh-thuc", "lt": "tên-miền-hiển-thị" }
+  ]
+}
+```
+
+Mỗi hướng dẫn phải đạt:
+- **4–8 bước theo đúng thứ tự làm**: tạo/chọn ví farm → thêm mạng (ghi đủ Network name, RPC, Chain ID, Symbol, Explorer) → faucet (lượng nhận, bao lâu xin lại, có captcha/đăng nhập không) → hành động cụ thể (bấm nút nào, gửi bao nhiêu) → cách kiểm tra đã xong (explorer/portal) → nhịp làm hằng ngày/tuần.
+- Mỗi bước có **1 link chính thức** nếu có, kèm tên miền hiển thị trong `lt` để người dùng nhận ra link giả.
+- Ghi rõ **mốc thời gian** (snapshot, season, hạn đăng ký) theo giờ Việt Nam nếu có.
+- Có bước nào worker tự động hoá được thì ghi ở bước cuối và gợi ý bấm "🤖 Nhờ viết tool".
+- Kèo **phải nạp tiền thật** thì không để ở trạng thái `farm`: chuyển sang `drop` (hoặc `wait`) và giải thích trong `guide`.
+- `daily` / `once` ngắn gọn, khớp với các bước trong `guide`.
+- Kiểm tra lại hướng dẫn của các kèo cũ mỗi tuần: link còn sống không, có thay đổi gì không. Sửa thì cập nhật `updated`.
+
+Web tự đồng bộ `name/chain/status/prio/daily/once/note/web/x` từ `airdrops.json` sang trình duyệt người dùng, **trừ** những kèo họ đã tự bấm Sửa.
 
 ## Quy tắc an toàn (bắt buộc)
 

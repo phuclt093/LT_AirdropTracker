@@ -105,6 +105,22 @@ button.danger{color:var(--bad)}
 .week ol li{margin-bottom:6px}
 .week ol li b{color:var(--acc2);font-weight:600}
 .week .pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:6px;background:#0e1218;border:1px solid var(--line);margin:2px 4px 0 0}
+details.guide{margin-top:10px;border:1px solid #2a4a66;border-radius:10px;background:#0f1722}
+details.guide summary{cursor:pointer;padding:9px 12px;font-size:13px;font-weight:600;color:var(--acc2);list-style:none;display:flex;justify-content:space-between;gap:8px}
+details.guide summary::-webkit-details-marker{display:none}
+details.guide summary::before{content:"▸ ";} details.guide[open] summary::before{content:"▾ ";}
+details.guide summary span{font-weight:400;color:var(--muted);font-size:12px;margin-left:auto}
+.gwarn{margin:0 12px 10px;background:#2a1f12;border:1px solid #5a4a2a;color:var(--warn);border-radius:8px;padding:8px 10px;font-size:12px}
+ol.gsteps{list-style:none;margin:0;padding:0 12px 12px;counter-reset:g}
+ol.gsteps li{display:flex;gap:10px;padding:10px 0;border-top:1px dashed var(--line);counter-increment:g}
+ol.gsteps li .num{flex:none;width:24px;height:24px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--acc2)}
+ol.gsteps li.ok .num{background:var(--acc);color:#06240f;border-color:var(--acc)}
+ol.gsteps li.ok .gt{text-decoration:line-through;color:var(--muted)}
+ol.gsteps .gt{font-weight:600;font-size:13px}
+ol.gsteps .gd{font-size:13px;color:#c5ccd6;white-space:pre-wrap;margin-top:3px;line-height:1.55}
+ol.gsteps .gl{display:inline-block;margin-top:6px;font-size:12px;color:#04182a;background:var(--acc2);padding:3px 10px;border-radius:6px;text-decoration:none;font-weight:600}
+ol.gsteps .gdone{margin-left:auto;flex:none;font-size:11px;color:var(--muted);display:flex;align-items:flex-start;gap:4px;cursor:pointer}
+ol.gsteps .gdone input{width:16px;height:16px;accent-color:var(--acc);padding:0;margin:0}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#06240f;padding:8px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
 </style>
 </head>
@@ -280,7 +296,7 @@ async function fetchJson(u){try{const r=await fetch(u,{cache:"no-store"});return
 function emptyState(){return {version:1,items:[],wallets:[],dailyDone:{},activity:{},removed:[]}}
 
 let state=null, filter="all", q="", editingId=null, mode="local";
-let repoById={}, onchain={stats:null,runs:null}, weekly=null, repoSlug="", requests={};
+let openGuides=new Set(), repoById={}, onchain={stats:null,runs:null}, weekly=null, repoSlug="", requests={};
 
 /* ---------- persistence: localStorage trên trình duyệt ---------- */
 function setSync(m,txt){mode=m;const d=document.getElementById("syncDot");d.className="dot "+(m==="ok"?"ok":"local");document.getElementById("syncTxt").textContent=txt}
@@ -289,7 +305,7 @@ function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));setS
 function scheduleSave(){saveLocal()}
 function normalize(s){
   if(!s||!Array.isArray(s.items))return null;
-  s.wallets=s.wallets||[];s.dailyDone=s.dailyDone||{};s.activity=s.activity||{};s.removed=s.removed||[];
+  s.guideDone=s.guideDone||{};s.wallets=s.wallets||[];s.dailyDone=s.dailyDone||{};s.activity=s.activity||{};s.removed=s.removed||[];
   s.items.forEach(i=>{i.daily=i.daily||[];i.once=i.once||[];i.doneOnce=i.doneOnce||[]});
   return s;
 }
@@ -303,6 +319,16 @@ async function init(){
   repo.forEach(j=>{if(j.id)repoById[j.id]=j});
   onchain={stats,runs};
   // thêm kèo mới từ airdrops.json (không ghi đè kèo bạn đã sửa / đã xoá)
+  // đồng bộ kèo gốc từ airdrops.json (trừ kèo bạn đã tự sửa)
+  let synced=0;
+  state.items.forEach(i=>{const j=repoById[i.id];if(!j||!i.fromRepo||i.userEdited)return;
+    const before=JSON.stringify([i.name,i.chain,i.status,i.prio,i.web,i.x,i.note,i.daily.map(t=>t.t),i.once.map(t=>t.t)]);
+    Object.assign(i,{name:j.name||i.name,chain:j.chain||"",type:j.type||i.type,status:j.status||i.status,prio:j.prio||i.prio,web:j.web||"",x:j.x||"",note:j.note||""});
+    i.daily=reconcile(i.daily,(j.daily||[]).join("\n"));i.once=reconcile(i.once,(j.once||[]).join("\n"));
+    i.doneOnce=i.doneOnce.filter(id=>i.once.some(t=>t.id===id));
+    if(before!==JSON.stringify([i.name,i.chain,i.status,i.prio,i.web,i.x,i.note,i.daily.map(t=>t.t),i.once.map(t=>t.t)]))synced++;
+  });
+  if(synced)saveLocal();
   let added=0;
   repo.forEach(j=>{if(j.id&&!state.items.some(i=>i.id===j.id)&&!state.removed.includes(j.id)){state.items.push(fromJson(j));added++}});
   if(added){saveLocal();toast("Thêm "+added+" kèo mới từ airdrops.json")}
@@ -365,6 +391,16 @@ function onchainPanel(i){
     ${runHtml}${low}</div>`;
 }
 
+function guidePanel(i){
+  const r=repoById[i.id];const g=r&&r.guide;if(!g||!(g.steps||[]).length)return "";
+  const done=(state.guideDone&&state.guideDone[i.id])||[];
+  const n=g.steps.filter((_,k)=>done.includes(k)).length;
+  const open=openGuides.has(i.id)?" open":"";
+  return `<details class="guide" data-guide="${i.id}"${open}><summary>📖 Hướng dẫn chi tiết · ${n}/${g.steps.length} bước<span>${g.updated?"cập nhật "+new Date(g.updated).toLocaleDateString("vi-VN"):""}</span></summary>
+    ${g.warn?`<div class="gwarn">⚠️ ${esc(g.warn)}</div>`:""}
+    <ol class="gsteps">${g.steps.map((st,k)=>{const ok=done.includes(k);const L=safeUrl(st.link);
+      return `<li class="${ok?"ok":""}"><div class="num">${ok?"✓":k+1}</div><div style="flex:1;min-width:0"><div class="gt">${esc(st.t)}</div>${st.d?`<div class="gd">${esc(st.d)}</div>`:""}${L?`<a class="gl" href="${esc(L)}" target="_blank" rel="noopener">Mở ${esc(st.lt||"link")} ↗</a>`:""}</div><label class="gdone"><input type="checkbox" data-gstep="${i.id}|${k}" ${ok?"checked":""}>xong</label></li>`}).join("")}</ol></details>`;
+}
 function toolBadge(i){
   if(chainKeyOf(i))return `<span class="req ok" title="Worker máy nhà đang farm kèo này">🤖 Có tool</span>`;
   const r=requests[i.name.toLowerCase()];
@@ -410,6 +446,7 @@ function render(){
         <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${toolBadge(i)}<button class="ghost" data-edit="${i.id}">Sửa</button></div></div>
       ${i.daily.length?`<div class="tasks"><div class="hint">Hằng ngày</div>${i.daily.map(t=>`<label class="task ${isDoneToday(t.id)?"ok":""}"><input type="checkbox" data-daily="${t.id}" ${isDoneToday(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
       ${i.once.length?`<div class="tasks"><div class="hint">Làm 1 lần · ${onceDone}/${i.once.length}</div>${i.once.map(t=>`<label class="task ${i.doneOnce.includes(t.id)?"ok":""}"><input type="checkbox" data-once="${i.id}|${t.id}" ${i.doneOnce.includes(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
+      ${guidePanel(i)}
       ${onchainPanel(i)}
       ${(i.recv||Number(i.sold))?`<div class="money">${i.recv?"Nhận: "+esc(i.recv):""}${i.recv&&Number(i.sold)?" · ":""}${Number(i.sold)?"Bán: "+fmtVND(i.sold):""}</div>`:""}
       ${(web||x)?`<div class="links">${web?`<a href="${esc(web)}" target="_blank" rel="noopener">🌐 Website</a>`:""}${x?`<a href="${esc(x)}" target="_blank" rel="noopener">𝕏 X</a>`:""}</div>`:""}
@@ -458,6 +495,7 @@ $("saveBtn").onclick=()=>{
   if(!i){i={id:uid(),daily:[],once:[],doneOnce:[],created:todayStr()};state.items.push(i)}
   Object.assign(i,{name,chain:$("fChain").value.trim(),type:$("fType").value,status:$("fStatus").value,prio:$("fPrio").value,wallet:$("fWallet").value.trim(),
     web:$("fWeb").value.trim(),x:$("fX").value.trim(),recv:$("fRecv").value.trim(),sold:Number($("fSold").value)||0,note:$("fNote").value.trim()});
+  i.userEdited=true;
   i.daily=reconcile(i.daily,$("fDaily").value);i.once=reconcile(i.once,$("fOnce").value);
   i.doneOnce=i.doneOnce.filter(id=>i.once.some(t=>t.id===id));
   $("mItem").classList.remove("open");scheduleSave();render();toast("Đã lưu");
@@ -531,6 +569,7 @@ $("dAction").onclick=async()=>{
 document.addEventListener("change",e=>{
   const d=e.target.dataset;
   if(d.daily){toggleDaily(d.daily)}
+  else if(d.gstep){const [iid,k]=d.gstep.split("|");state.guideDone=state.guideDone||{};const a=state.guideDone[iid]||(state.guideDone[iid]=[]);const ix=a.indexOf(+k);if(ix>=0)a.splice(ix,1);else{a.push(+k);const t=todayStr();state.activity[t]=(state.activity[t]||0)+1}scheduleSave();render()}
   else if(d.once){const [iid,tid]=d.once.split("|");const it=state.items.find(x=>x.id===iid);if(it)toggleOnce(it,tid)}
 });
 document.addEventListener("click",async e=>{
@@ -542,6 +581,7 @@ document.addEventListener("click",async e=>{
   else if(t.dataset.delw){state.wallets=state.wallets.filter(w=>w.id!==t.dataset.delw);scheduleSave();render()}
 });
 $("q").addEventListener("input",e=>{q=e.target.value;render()});
+document.addEventListener("toggle",e=>{const el=e.target;if(el.dataset&&el.dataset.guide){if(el.open)openGuides.add(el.dataset.guide);else openGuides.delete(el.dataset.guide)}},true);
 document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
 document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".modal.open").forEach(m=>m.classList.remove("open"))});
 let tt;function toast(s){const el=$("toast");el.textContent=s;el.style.display="block";clearTimeout(tt);tt=setTimeout(()=>el.style.display="none",1600)}

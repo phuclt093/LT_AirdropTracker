@@ -1,24 +1,59 @@
 {
-  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập.",
+  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập. 'guide': {updated, warn, steps:[{t,d,link,lt}]} — hướng dẫn chi tiết từng bước, web hiện trong khung 📖.",
   "repo": "phuclt093/LT_AirdropTracker",
   "airdrops": [
     {
       "id": "flop-labs",
       "name": "Flop Labs",
-      "chain": "Testnet (sắp mở)",
+      "chain": "Chưa công bố (testnet sắp mở)",
       "type": "Testnet",
       "status": "farm",
       "prio": "high",
       "daily": [
-        "Check X của Arthur Hayes / Flop Labs xem testnet mở chưa"
+        "Mở X @flop_labs xem testnet mở chưa"
       ],
       "once": [
-        "Follow X chính thức",
-        "Chuẩn bị ví farm riêng"
+        "Follow @flop_labs + bật chuông",
+        "Điền form vai trò trên flop.finance",
+        "Tạo DID trên Technocore.chat"
       ],
-      "web": "",
-      "x": "",
-      "note": "Testnet + airdrop dự kiến mở trong vài tuần (tin 21/10/2026). Hiện CHƯA có token FLOP — ai bán là scam."
+      "web": "https://flop.finance",
+      "x": "https://x.com/flop_labs",
+      "note": "Testnet dự kiến chạy ~90 ngày; khoảng 20% tổng cung dành cho người tham gia testnet. CHƯA có token FLOP — ai bán/“claim” là lừa đảo.",
+      "guide": {
+        "updated": "2026-11-01",
+        "warn": "Chưa có token FLOP. Mọi trang “claim FLOP”, “presale FLOP” đều là lừa đảo. Flop Labs chưa công bố chạy trên chain nào, nên chưa cần thêm mạng vào ví.",
+        "steps": [
+          {
+            "t": "Follow X chính thức và bật thông báo",
+            "d": "Mở link, bấm Follow, rồi bấm biểu tượng chuông 🔔 chọn “Tất cả bài đăng”. Đây là điều kiện duy nhất dự án đã công bố, và ngày mở testnet sẽ được đăng ở đây trước tiên. Follow thêm Arthur Hayes (@CryptoHayes).",
+            "link": "https://x.com/flop_labs",
+            "lt": "x.com/flop_labs"
+          },
+          {
+            "t": "Điền form vai trò trên website",
+            "d": "Vào flop.finance, chọn vai trò phù hợp rồi điền form: Miner (có GPU để chạy AI), Validator (chạy node xác minh), hoặc Creator/KOL (làm nội dung). Không có GPU thì chọn Validator hoặc Creator. Ghi đúng địa chỉ ví farm và tài khoản X.",
+            "link": "https://flop.finance",
+            "lt": "flop.finance"
+          },
+          {
+            "t": "Tạo danh tính DID cho AI agent trên Technocore",
+            "d": "Technocore.chat là mạng chat dành cho AI agent do Flop Labs vận hành. Faucet testnet sẽ phát token ở đây, nhưng chỉ cho agent có DID. Làm theo hướng dẫn chính thức trong repo GitHub flop-labs để tạo 1 DID (khoá Ed25519). Giữ file khoá DID cẩn thận như private key, và chỉ dùng 1 DID duy nhất cho mọi hoạt động. Nếu ngại làm tay, bấm “🤖 Nhờ viết tool” để Claude viết script tạo DID chạy trên máy nhà.",
+            "link": "https://github.com/flop-labs/technocore-sonnet-challenge",
+            "lt": "GitHub flop-labs"
+          },
+          {
+            "t": "Theo dõi Technocore.chat",
+            "d": "Mở technocore.chat vài ngày một lần xem faucet hoặc task mới đã có chưa. Lượng airdrop sẽ tính theo hoạt động testnet, nên khi testnet mở thì đây là kèo cần làm đều nhất.",
+            "link": "https://technocore.chat",
+            "lt": "technocore.chat"
+          },
+          {
+            "t": "Khi testnet mở",
+            "d": "Claude sẽ cập nhật hướng dẫn cụ thể vào sáng thứ Hai ngay sau đó: thêm mạng, faucet, task cần làm. Nếu làm được thì viết luôn tool tự động."
+          }
+        ]
+      }
     },
     {
       "id": "arc-circle",
@@ -29,69 +64,206 @@
       "prio": "high",
       "daily": [
         "(Tự động) Worker farm 2–4 giao dịch",
-        "Xin faucet USDC nếu số dư < 1"
+        "Xin faucet USDC nếu web báo sắp hết"
       ],
       "once": [
-        "Thêm Arc testnet vào MetaMask",
-        "Cài worker trên máy nhà",
-        "Thử 1 dApp trên Arc (vd XyloNet)"
+        "Tạo ví farm riêng",
+        "Thêm mạng Arc Testnet vào MetaMask",
+        "Xin USDC + EURC ở faucet",
+        "Cài worker trên máy nhà"
       ],
-      "web": "https://docs.arc.network",
+      "web": "https://docs.arc.network/integrate/connect-to-arc",
       "x": "",
-      "note": "L1 của Circle, gas bằng USDC. Token chưa xác nhận airdrop.",
-      "onchain": "arc"
+      "note": "L1 của Circle, gas trả bằng USDC. Chưa xác nhận airdrop hay points chính thức, đây là kèo cược sớm.",
+      "onchain": "arc",
+      "guide": {
+        "updated": "2026-11-01",
+        "warn": "Chưa có chương trình points hay airdrop chính thức. Chỉ dùng ví farm riêng, không dùng ví chính.",
+        "steps": [
+          {
+            "t": "Tạo ví farm riêng",
+            "d": "MetaMask → bấm tên tài khoản ở trên cùng → “Add account or hardware wallet” → “Add a new account” → đặt tên “Farm”. Dùng ví này cho mọi kèo, và cũng là ví worker máy nhà sẽ dùng."
+          },
+          {
+            "t": "Thêm mạng Arc Testnet vào MetaMask",
+            "d": "Cách nhanh: mở trang docs, bấm nút “Add Arc Testnet” rồi bấm Approve trong MetaMask. Cách thủ công: MetaMask → Settings → Networks → Add a network manually, điền:\n• Network name: Arc Testnet\n• RPC URL: https://rpc.testnet.arc.network\n• Chain ID: 5042002\n• Currency symbol: USDC\n• Block explorer: https://testnet.arcscan.app",
+            "link": "https://docs.arc.network/integrate/connect-to-arc",
+            "lt": "docs.arc.network"
+          },
+          {
+            "t": "Xin USDC testnet (dùng làm gas)",
+            "d": "Vào faucet.circle.com → ô Network chọn “Arc Testnet” → chọn thẻ USDC → dán địa chỉ ví farm → bấm Send. Mỗi lần nhận khoảng 10–20 USDC, 1–2 tiếng xin lại được. Không cần tài khoản.",
+            "link": "https://faucet.circle.com",
+            "lt": "faucet.circle.com"
+          },
+          {
+            "t": "Xin thêm EURC",
+            "d": "Cũng ở trang faucet, đổi sang thẻ EURC rồi gửi về cùng địa chỉ. Có EURC thì worker làm thêm được loại giao dịch chuyển EURC.",
+            "link": "https://faucet.circle.com",
+            "lt": "faucet.circle.com"
+          },
+          {
+            "t": "Kiểm tra tiền đã về",
+            "d": "Mở testnet.arcscan.app, dán địa chỉ ví vào ô tìm kiếm. Thấy giao dịch nhận USDC/EURC là ổn. Trong MetaMask, số dư USDC hiện ngay ở mạng Arc Testnet.",
+            "link": "https://testnet.arcscan.app",
+            "lt": "testnet.arcscan.app"
+          },
+          {
+            "t": "Cài worker để tự farm mỗi ngày",
+            "d": "Trên máy nhà: cd ~/Projects/LT_AirdropTracker/worker → nano .env (dán PRIVATE_KEY của ví farm) → bash install.sh. Từ đó mỗi ngày máy tự làm 2–4 giao dịch vào giờ ngẫu nhiên, và web hiện số liệu trong khung ⛓ bên dưới."
+          },
+          {
+            "t": "Mỗi tuần tự dùng 1 dApp thật",
+            "d": "Dự án thường đánh giá cao ví dùng sản phẩm thật hơn ví chỉ tự chuyển tiền cho mình. Tìm dApp trong mục ứng dụng/ecosystem ở docs Arc, hoặc các link mà X chính thức của Arc đăng. Chỉ kết nối ví farm, và từ chối mọi yêu cầu ký lạ.",
+            "link": "https://docs.arc.network",
+            "lt": "docs.arc.network"
+          }
+        ]
+      }
     },
     {
       "id": "giwa",
       "name": "GIWA (Upbit)",
-      "chain": "GIWA testnet",
+      "chain": "GIWA Sepolia (chain 91342)",
       "type": "Testnet",
       "status": "farm",
       "prio": "mid",
       "daily": [
-        "Faucet + 1 giao dịch"
+        "Xin ETH ở GIWA Faucet",
+        "Xin ETH ở Nodit Faucet",
+        "1–2 giao dịch trên GIWA Sepolia"
       ],
       "once": [
-        "Thêm mạng GIWA vào ví",
-        "Bridge thử testnet"
+        "Thêm mạng GIWA Sepolia vào MetaMask",
+        "Thử bridge Sepolia → GIWA"
       ],
-      "web": "",
+      "web": "https://docs.giwa.io",
       "x": "",
-      "note": "L2 của Upbit trên OP Stack. Chưa công bố token."
+      "note": "L2 của Upbit (Dunamu) trên OP Stack, block 1 giây. Chưa công bố token hay points.",
+      "guide": {
+        "updated": "2026-11-01",
+        "warn": "Chưa công bố token hay points, đây là kèo cược vào Upbit. Faucet mỗi ngày chỉ cho ít ETH, nên cứ xin đều đặn.",
+        "steps": [
+          {
+            "t": "Thêm mạng GIWA Sepolia (1 click)",
+            "d": "Mở trang explorer, kéo xuống cuối trang, bấm nút thêm mạng vào MetaMask rồi Approve. Nếu muốn thêm thủ công:\n• Network name: GIWA Sepolia\n• RPC URL: https://sepolia-rpc.giwa.io\n• Chain ID: 91342\n• Currency symbol: ETH\n• Block explorer: https://sepolia-explorer.giwa.io",
+            "link": "https://sepolia-explorer.giwa.io",
+            "lt": "sepolia-explorer.giwa.io"
+          },
+          {
+            "t": "Xin ETH ở GIWA Faucet (mỗi 24h)",
+            "d": "Vào faucet.giwa.io, dán địa chỉ ví farm rồi bấm nhận. Mỗi lần được tối đa 0.005 ETH, 24 tiếng một lần.",
+            "link": "https://faucet.giwa.io",
+            "lt": "faucet.giwa.io"
+          },
+          {
+            "t": "Xin thêm ở Nodit Faucet (mỗi 24h)",
+            "d": "Faucet thứ hai, mỗi lần 0.01 ETH, 24 tiếng một lần. Xin cả hai faucet mỗi ngày để có đủ gas.",
+            "link": "https://faucet.lambda256.io/giwa-sepolia",
+            "lt": "faucet.lambda256.io"
+          },
+          {
+            "t": "Làm 1–2 giao dịch",
+            "d": "Trong MetaMask chọn mạng GIWA Sepolia → Send → gửi 0.0001 ETH cho chính địa chỉ của bạn (hoặc một ví phụ của bạn). Mỗi ngày làm vài giao dịch để ví có lịch sử hoạt động đều."
+          },
+          {
+            "t": "Thử bridge từ Ethereum Sepolia (tuỳ chọn)",
+            "d": "Nếu có Sepolia ETH (testnet của Ethereum), vào trang bridge, kết nối ví, rồi nạp một ít từ Sepolia sang GIWA. Bridge là hoạt động L2 thường được tính điểm cao hơn giao dịch đơn giản.",
+            "link": "https://sepolia-bridge.giwa.io",
+            "lt": "sepolia-bridge.giwa.io"
+          },
+          {
+            "t": "Tự động hoá",
+            "d": "Kèo này rất hợp để worker tự làm giao dịch mỗi ngày (giống Arc). Riêng phần xin faucet thì vẫn phải tự bấm. Bấm “🤖 Nhờ viết tool” để Claude làm vào thứ Hai."
+          }
+        ]
+      }
     },
     {
       "id": "genlayer",
       "name": "GenLayer",
-      "chain": "GenLayer testnet",
+      "chain": "GenLayer Studionet / Bradbury",
       "type": "Testnet",
       "status": "farm",
       "prio": "mid",
       "daily": [
-        "Tương tác testnet"
+        "Vào Discord GenLayer trò chuyện / hỏi đáp (tính XP)"
       ],
       "once": [
-        "Đọc docs, kết nối ví"
+        "Kết nối ví + X + Discord trên Portal",
+        "Deploy 1 contract mẫu trên GenLayer Studio",
+        "Nộp đóng góp đầu tiên trên Portal"
       ],
-      "web": "",
+      "web": "https://portal.genlayer.foundation",
       "x": "",
-      "note": "Có testnet, chưa có token/snapshot."
+      "note": "Season 1 đã chốt snapshot 25/10 và đóng đăng ký 26/10/2026. Season 2 bắt đầu 26/10, điểm được cộng dồn. Kèo này cần đóng góp thật (build hoặc viết bài), làm social không thì không đủ.",
+      "guide": {
+        "updated": "2026-11-01",
+        "warn": "Season 1 đã đóng (snapshot 25/10/2026). Bây giờ là Season 2. Ở Season 1, điều kiện là ≥150 GLP kèm 1 đóng góp được duyệt hoặc có Discord XP. Chỉ làm task onboarding/social thì KHÔNG đủ. Ngoài ra faucet có captcha nên không tự động hoá được.",
+        "steps": [
+          {
+            "t": "Vào Portal và kết nối tài khoản",
+            "d": "Mở portal.genlayer.foundation (kiểm tra kỹ đúng tên miền, kèo này hay bị giả mạo). Kết nối ví farm, rồi liên kết X và Discord theo hướng dẫn trên Portal. Điểm GLP và đóng góp của bạn đều hiện ở đây.",
+            "link": "https://portal.genlayer.foundation",
+            "lt": "portal.genlayer.foundation"
+          },
+          {
+            "t": "Tham gia Discord và hoạt động thật",
+            "d": "Dùng link Discord trên Portal. Mỗi ngày vào hỏi đáp hoặc giúp người khác vài câu. Discord XP và role là một trong các điều kiện xét thưởng. Không spam vì sẽ bị trừ."
+          },
+          {
+            "t": "Deploy contract mẫu trên GenLayer Studio",
+            "d": "Mở studio.genlayer.com (Studionet, không cần token) → kết nối ví → mở mục “Run and Debug” → chọn file mẫu llm_erc20.py → Deploy. Sau đó gọi thử 1–2 hàm của contract. Lưu lại địa chỉ contract và link giao dịch.",
+            "link": "https://studio.genlayer.com",
+            "lt": "studio.genlayer.com"
+          },
+          {
+            "t": "(Tuỳ chọn) Xin GEN testnet cho mạng Bradbury",
+            "d": "Muốn deploy lên testnet Bradbury (chain ID 4221) thì vào faucet, kết nối ví, giải captcha rồi nhận GEN.",
+            "link": "https://testnet-faucet.genlayer.foundation",
+            "lt": "testnet-faucet.genlayer.foundation"
+          },
+          {
+            "t": "Nộp đóng góp để có điểm",
+            "d": "Portal → Contributions → chọn loại phù hợp:\n• Builder – Contract Deployed: contract phải có chức năng thật (không phải Hello World), kèm link explorer.\n• Community: bài viết hoặc thread hướng dẫn tiếng Việt về GenLayer, kèm link.\nChỉ đóng góp được duyệt mới có điểm. Nên làm mỗi tuần 1 đóng góp chất lượng.",
+            "link": "https://portal.genlayer.foundation",
+            "lt": "Portal → Contributions"
+          },
+          {
+            "t": "Theo dõi điểm hằng tuần",
+            "d": "Điểm GLP được quy đổi vào 23:59 UTC Chủ nhật, tức 6:59 sáng thứ Hai giờ Việt Nam. Hướng dẫn tuần của Claude sẽ nhắc nếu có mốc mới."
+          }
+        ]
+      }
     },
     {
       "id": "hotstuff",
       "name": "Hotstuff",
-      "chain": "Hotstuff testnet",
+      "chain": "Hotstuff L1 (mainnet)",
       "type": "Testnet",
-      "status": "farm",
+      "status": "drop",
       "prio": "low",
-      "daily": [
-        "Làm Expeditions trong ngày"
-      ],
-      "once": [
-        "Kết nối ví"
-      ],
+      "daily": [],
+      "once": [],
       "web": "",
       "x": "",
-      "note": "Có testnet + trang Expeditions, chưa xác nhận airdrop."
+      "note": "ĐÃ BỎ khỏi danh sách free: Hotstuff đã lên mainnet. Muốn có điểm phải nạp USDC thật để trade perp (đòn bẩy tới 50x) hoặc gửi vào vault, rủi ro mất tiền.",
+      "guide": {
+        "updated": "2026-11-01",
+        "warn": "Không còn là kèo free. Muốn có điểm phải dùng tiền thật và trade perp có đòn bẩy, có thể mất tiền.",
+        "steps": [
+          {
+            "t": "Vì sao bỏ",
+            "d": "Hotstuff đã chạy mainnet và tính điểm theo khối lượng trade perp hoặc tiền gửi vào vault thanh khoản. Mục tiêu của tracker là farm miễn phí, nên mình chuyển kèo này sang “Bỏ”."
+          },
+          {
+            "t": "Nếu vẫn muốn chơi (có vốn)",
+            "d": "Chỉ dùng số tiền chấp nhận mất hết, để đòn bẩy thấp (1–3x), và tuyệt đối không làm kiểu “2 tài khoản đánh ngược nhau” mà một số trang hướng dẫn. Kiểu đó bị coi là gian lận và dễ bị loại khỏi airdrop. Theo dõi tin trên X chính thức của Hotstuff.",
+            "link": "https://x.com/tradehotstuff",
+            "lt": "x.com/tradehotstuff"
+          }
+        ]
+      }
     }
   ]
 }
