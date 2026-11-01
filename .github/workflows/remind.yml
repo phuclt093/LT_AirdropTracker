@@ -1,0 +1,25 @@
+name: Nhắc việc farm qua Telegram
+
+on:
+  schedule:
+    # 00:47 UTC = 7:47 sáng giờ Việt Nam, mỗi ngày
+    - cron: "47 0 * * *"
+  workflow_dispatch: # bấm "Run workflow" để test ngay
+
+permissions:
+  contents: read
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Gửi tin nhắn
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: node scripts/remind.mjs

@@ -1,0 +1,70 @@
+{
+  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án.",
+  "airdrops": [
+    {
+      "id": "flop-labs",
+      "name": "Flop Labs",
+      "chain": "Testnet (sắp mở)",
+      "type": "Testnet",
+      "status": "farm",
+      "prio": "high",
+      "daily": ["Check X của Arthur Hayes / Flop Labs xem testnet mở chưa"],
+      "once": ["Follow X chính thức", "Chuẩn bị ví farm riêng"],
+      "web": "",
+      "x": "",
+      "note": "Testnet + airdrop dự kiến mở trong vài tuần (tin 21/10/2026). Hiện CHƯA có token FLOP — ai bán là scam."
+    },
+    {
+      "id": "arc-circle",
+      "name": "Arc (Circle)",
+      "chain": "Arc testnet",
+      "type": "Testnet",
+      "status": "farm",
+      "prio": "high",
+      "daily": ["Xin faucet USDC testnet", "Gửi / swap 1–2 giao dịch"],
+      "once": ["Thêm Arc testnet vào MetaMask", "Thử 1 dApp trên Arc (vd XyloNet)"],
+      "web": "",
+      "x": "",
+      "note": "L1 của Circle, gas bằng USDC. Token chưa xác nhận airdrop."
+    },
+    {
+      "id": "giwa",
+      "name": "GIWA (Upbit)",
+      "chain": "GIWA testnet",
+      "type": "Testnet",
+      "status": "farm",
+      "prio": "mid",
+      "daily": ["Faucet + 1 giao dịch"],
+      "once": ["Thêm mạng GIWA vào ví", "Bridge thử testnet"],
+      "web": "",
+      "x": "",
+      "note": "L2 của Upbit trên OP Stack. Chưa công bố token."
+    },
+    {
+      "id": "genlayer",
+      "name": "GenLayer",
+      "chain": "GenLayer testnet",
+      "type": "Testnet",
+      "status": "farm",
+      "prio": "mid",
+      "daily": ["Tương tác testnet"],
+      "once": ["Đọc docs, kết nối ví"],
+      "web": "",
+      "x": "",
+      "note": "Có testnet, chưa có token/snapshot."
+    },
+    {
+      "id": "hotstuff",
+      "name": "Hotstuff",
+      "chain": "Hotstuff testnet",
+      "type": "Testnet",
+      "status": "farm",
+      "prio": "low",
+      "daily": ["Làm Expeditions trong ngày"],
+      "once": ["Kết nối ví"],
+      "web": "",
+      "x": "",
+      "note": "Có testnet + trang Expeditions, chưa xác nhận airdrop."
+    }
+  ]
+}

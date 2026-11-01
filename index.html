@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airdrop Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0f14;--panel:#131820;--panel2:#1a2029;--line:#252d38;--text:#e6eaf0;--muted:#8a95a5;
+  --acc:#7cf0b4;--acc2:#5ab8ff;--warn:#ffc35a;--bad:#ff6b7a;--violet:#b49cff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 18px 60px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{margin:0;font-size:26px;letter-spacing:-.02em}
+h1 span{color:var(--acc)}
+.sub{color:var(--muted);font-size:13px}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--acc)} .dot.local{background:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.stat .v{font-size:26px;font-weight:700;font-family:"JetBrains Mono",monospace;margin-top:4px}
+.stat .h{font-size:12px;color:var(--muted)}
+.bar{height:6px;background:var(--panel2);border-radius:4px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:4px;transition:width .3s}
+.grid2{display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.panel h2{margin:0 0 12px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:8px 10px;font:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc2)}
+textarea{width:100%;resize:vertical}
+button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 12px}
+button:hover{border-color:var(--acc2)}
+button.pri{background:var(--acc);color:#06240f;border-color:var(--acc);font-weight:600}
+button.ghost{background:none;border-color:transparent;color:var(--muted);padding:4px 8px}
+button.ghost:hover{color:var(--text)}
+button.danger{color:var(--bad)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:none;color:var(--muted);font-size:12px}
+.chip.on{background:var(--acc2);border-color:var(--acc2);color:#04182a;font-weight:600}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.card.done{opacity:.55}
+.ch{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.ch h3{margin:0;font-size:16px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;background:#0e1218;border:1px solid var(--line);color:var(--muted)}
+.tag.s-farm{color:var(--acc);border-color:#2f5a44}
+.tag.s-wait{color:var(--warn);border-color:#5a4a2a}
+.tag.s-claim{color:var(--acc2);border-color:#2a4a66}
+.tag.s-sold{color:var(--violet);border-color:#463a6a}
+.tag.s-drop{color:var(--bad);border-color:#5a2a32}
+.tag.p-high{color:var(--bad)}
+.tasks{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.task{display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0}
+.task input{width:16px;height:16px;accent-color:var(--acc);padding:0}
+.task.ok span{text-decoration:line-through;color:var(--muted)}
+.task small{color:var(--muted);font-size:11px;margin-left:auto}
+.links{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.links a{color:var(--acc2);font-size:12px;text-decoration:none}
+.links a:hover{text-decoration:underline}
+.note{font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-wrap}
+.money{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--acc);margin-top:6px}
+.heat{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;margin-top:8px}
+.heat div{aspect-ratio:1;border-radius:3px;background:var(--panel2)}
+.heat div.l1{background:#1f4a35}.heat div.l2{background:#2f7a52}.heat div.l3{background:var(--acc)}
+.today-item{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.today-item:last-child{border:none}
+.today-item b{font-weight:600;color:var(--acc2);font-size:12px;min-width:80px}
+.warnbox{background:#2a1f12;border:1px solid #5a4a2a;color:var(--warn);border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:12px}
+.wallet{display:flex;gap:6px;align-items:center;font-family:"JetBrains Mono",monospace;font-size:12px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.wallet span{flex:1;overflow:hidden;text-overflow:ellipsis}
+.wallet em{font-style:normal;color:var(--muted);font-family:"Be Vietnam Pro";}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-start;justify-content:center;padding:40px 14px;overflow:auto;z-index:10}
+.modal.open{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;width:100%;max-width:560px}
+.mbox h2{margin:0 0 14px;font-size:18px}
+.f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.f label{font-size:12px;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mfoot{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
+.hint{font-size:11px;color:var(--muted)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#06240f;padding:8px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🪂 Airdrop <span>Tracker</span></h1>
+      <div class="sub" id="todayLabel"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div class="sync"><i class="dot" id="syncDot"></i><span id="syncTxt">Đang tải…</span></div>
+      <button class="pri" id="addBtn">+ Thêm kèo</button>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Danh sách kèo</h2>
+      <div class="toolbar">
+        <input id="q" placeholder="Tìm tên, chain…" style="flex:1;min-width:160px">
+        <div class="chips" id="filters"></div>
+      </div>
+      <div id="list"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="panel">
+        <h2>Hôm nay cần làm <span class="sub" id="todayCount"></span></h2>
+        <div id="today"></div>
+      </div>
+      <div class="panel">
+        <h2>Chuỗi ngày farm <span class="sub" id="streak"></span></h2>
+        <div class="heat" id="heat"></div>
+        <div class="hint" style="margin-top:6px">30 ngày gần nhất · ô sáng = ngày có tick việc</div>
+      </div>
+      <div class="panel">
+        <h2>Ví farm <button class="ghost" id="addWallet">+ Thêm</button></h2>
+        <div class="warnbox">⚠️ Chỉ lưu <b>địa chỉ ví công khai</b> (0x…). Không bao giờ dán seed phrase hay private key vào đây hoặc bất kỳ trang nào.</div>
+        <div id="wallets"></div>
+      </div>
+      <div class="panel">
+        <h2>Sao lưu</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="exportBtn">Copy dữ liệu (JSON)</button>
+          <button id="importBtn">Nhập dữ liệu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: airdrop -->
+<div class="modal" id="mItem">
+  <div class="mbox">
+    <h2 id="mTitle">Thêm kèo</h2>
+    <div class="row">
+      <div class="f"><label>Tên dự án *</label><input id="fName"></div>
+      <div class="f"><label>Chain / mạng</label><input id="fChain" placeholder="vd: Arc testnet"></div>
+    </div>
+    <div class="row">
+      <div class="f"><label>Loại</label>
+        <select id="fType"><option>Testnet</option><option>Points</option><option>Quest</option><option>Mainnet</option><option>Khác</option></select></div>
+      <div class="f"><label>Trạng thái</label>
+        <select id="fStatus"></select></div>
+    </div>
+    <div class="row">
+      <div class="f"><label>Ưu tiên</label>
+        <select id="fPrio"><option value="high">Cao</option><option value="mid">Trung bình</option><option value="low">Thấp</option></select></div>
+      <div class="f"><label>Ví dùng</label><input id="fWallet" placeholder="vd: Ví farm 1"></div>
+    </div>
+    <div class="f"><label>Việc làm hằng ngày (mỗi dòng 1 việc — tự reset mỗi ngày)</label><textarea id="fDaily" rows="3" placeholder="Faucet&#10;Swap 1 lần&#10;Check-in"></textarea></div>
+    <div class="f"><label>Việc làm 1 lần (mỗi dòng 1 việc)</label><textarea id="fOnce" rows="3" placeholder="Kết nối ví&#10;Follow X&#10;Join Discord"></textarea></div>
+    <div class="row">
+      <div class="f"><label>Website chính thức</label><input id="fWeb" placeholder="https://"></div>
+      <div class="f"><label>X / Twitter</label><input id="fX" placeholder="https://x.com/…"></div>
+    </div>
+    <div class="row">
+      <div class="f"><label>Token nhận được</label><input id="fRecv" placeholder="vd: 1200 FLOP"></div>
+      <div class="f"><label>Đã bán được (VNĐ)</label><input id="fSold" type="number" min="0" placeholder="0"></div>
+    </div>
+    <div class="f"><label>Ghi chú</label><textarea id="fNote" rows="2"></textarea></div>
+    <div class="hint">Mẹo: chỉ lấy link từ tài khoản X chính thức của dự án. Mấy link "claim" lạ là lừa đảo.</div>
+    <div class="mfoot">
+      <button class="danger" id="delBtn">Xoá kèo</button>
+      <div style="display:flex;gap:8px"><button id="cancelBtn">Huỷ</button><button class="pri" id="saveBtn">Lưu</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: wallet -->
+<div class="modal" id="mWallet">
+  <div class="mbox">
+    <h2>Thêm ví farm</h2>
+    <div class="f"><label>Tên gợi nhớ</label><input id="wName" placeholder="Ví farm 1"></div>
+    <div class="f"><label>Địa chỉ công khai (0x…)</label><input id="wAddr" placeholder="0x…"></div>
+    <div class="hint" id="wErr" style="color:var(--bad)"></div>
+    <div class="mfoot"><span></span><div style="display:flex;gap:8px"><button id="wCancel">Huỷ</button><button class="pri" id="wSave">Lưu</button></div></div>
+  </div>
+</div>
+
+<!-- Modal: import/export -->
+<div class="modal" id="mData">
+  <div class="mbox">
+    <h2 id="dTitle">Dữ liệu</h2>
+    <textarea id="dText" rows="12" style="font-family:'JetBrains Mono',monospace;font-size:12px"></textarea>
+    <div class="hint" id="dErr" style="color:var(--bad)"></div>
+    <div class="mfoot"><span></span><div style="display:flex;gap:8px"><button id="dCancel">Đóng</button><button class="pri" id="dAction">Copy</button></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const STATUSES=[
+  {k:"farm",label:"Đang farm"},
+  {k:"wait",label:"Chờ TGE / snapshot"},
+  {k:"claim",label:"Có thể claim"},
+  {k:"sold",label:"Đã bán"},
+  {k:"drop",label:"Bỏ / trượt"}
+];
+const PRIO={high:"Ưu tiên cao",mid:"Ưu tiên TB",low:"Ưu tiên thấp"};
+const LS_KEY="airdrop-tracker-v1";
+
+function uid(){return Math.random().toString(36).slice(2,10)}
+function todayStr(d){d=d||new Date();const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function safeUrl(u){u=String(u||"").trim();return /^https?:\/\//i.test(u)?u:""}
+function fmtVND(n){n=Number(n)||0;return n.toLocaleString("vi-VN")+" ₫"}
+function mkTasks(lines){return lines.filter(Boolean).map(t=>({id:uid(),t:t}))}
+
+/* Kèo gốc nằm trong airdrops.json (sửa file đó trên GitHub là bot Telegram cũng thấy) */
+function fromJson(j){
+  return {id:j.id||uid(),name:j.name||"?",chain:j.chain||"",type:j.type||"Testnet",status:j.status||"farm",prio:j.prio||"mid",wallet:j.wallet||"",
+    daily:(j.daily||[]).map((t,k)=>({id:(j.id||"x")+"-d"+k,t})),once:(j.once||[]).map((t,k)=>({id:(j.id||"x")+"-o"+k,t})),
+    doneOnce:[],web:j.web||"",x:j.x||"",recv:"",sold:0,note:j.note||"",created:todayStr(),fromRepo:true};
+}
+async function loadRepoList(){
+  try{const r=await fetch("airdrops.json",{cache:"no-store"});if(!r.ok)return [];const j=await r.json();return Array.isArray(j.airdrops)?j.airdrops:[]}
+  catch(e){return []}
+}
+function emptyState(){return {version:1,items:[],wallets:[],dailyDone:{},activity:{},removed:[]}}
+
+let state=null, filter="all", q="", editingId=null, mode="local";
+
+/* ---------- persistence: localStorage trên trình duyệt ---------- */
+function setSync(m,txt){mode=m;const d=document.getElementById("syncDot");d.className="dot "+(m==="ok"?"ok":"local");document.getElementById("syncTxt").textContent=txt}
+function loadLocal(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));setSync("ok","Đã lưu trên trình duyệt")}catch(e){setSync("local","Không lưu được (trình duyệt chặn bộ nhớ)")}}
+function scheduleSave(){saveLocal()}
+function normalize(s){
+  if(!s||!Array.isArray(s.items))return null;
+  s.wallets=s.wallets||[];s.dailyDone=s.dailyDone||{};s.activity=s.activity||{};s.removed=s.removed||[];
+  s.items.forEach(i=>{i.daily=i.daily||[];i.once=i.once||[];i.doneOnce=i.doneOnce||[]});
+  return s;
+}
+
+async function init(){
+  state=normalize(loadLocal())||emptyState();
+  render();
+  const repo=await loadRepoList();
+  // thêm kèo mới từ airdrops.json (không ghi đè kèo bạn đã sửa / đã xoá)
+  let added=0;
+  repo.forEach(j=>{if(j.id&&!state.items.some(i=>i.id===j.id)&&!state.removed.includes(j.id)){state.items.push(fromJson(j));added++}});
+  if(added){saveLocal();toast("Thêm "+added+" kèo mới từ airdrops.json")}
+  else setSync("ok","Đã lưu trên trình duyệt");
+  render();
+}
+
+/* ---------- logic ---------- */
+function doneToday(){const t=todayStr();return state.dailyDone[t]||[]}
+function isDoneToday(id){return doneToday().includes(id)}
+function activeItems(){return state.items.filter(i=>i.status==="farm")}
+function toggleDaily(id){
+  const t=todayStr();const arr=state.dailyDone[t]||(state.dailyDone[t]=[]);
+  const ix=arr.indexOf(id);
+  if(ix>=0){arr.splice(ix,1);state.activity[t]=Math.max(0,(state.activity[t]||1)-1)}
+  else{arr.push(id);state.activity[t]=(state.activity[t]||0)+1}
+  // prune old dailyDone (keep 7 days)
+  Object.keys(state.dailyDone).forEach(k=>{if(k<todayStr(new Date(Date.now()-7*864e5)))delete state.dailyDone[k]});
+  scheduleSave();render();
+}
+function toggleOnce(item,id){
+  const ix=item.doneOnce.indexOf(id);
+  const t=todayStr();
+  if(ix>=0)item.doneOnce.splice(ix,1);else{item.doneOnce.push(id);state.activity[t]=(state.activity[t]||0)+1}
+  scheduleSave();render();
+}
+function streak(){
+  let n=0;const d=new Date();
+  if(!(state.activity[todayStr(d)]>0))d.setDate(d.getDate()-1);
+  while(state.activity[todayStr(d)]>0){n++;d.setDate(d.getDate()-1)}
+  return n;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const now=new Date();
+  document.getElementById("todayLabel").textContent=now.toLocaleDateString("vi-VN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  // stats
+  const act=activeItems();
+  const dailyAll=act.flatMap(i=>i.daily);
+  const dDone=dailyAll.filter(t=>isDoneToday(t.id)).length;
+  const pct=dailyAll.length?Math.round(dDone/dailyAll.length*100):0;
+  const soldTotal=state.items.reduce((s,i)=>s+(Number(i.sold)||0),0);
+  const claimable=state.items.filter(i=>i.status==="claim").length;
+  const waiting=state.items.filter(i=>i.status==="wait").length;
+  document.getElementById("stats").innerHTML=`
+    <div class="stat"><div class="k">Đang farm</div><div class="v">${act.length}</div><div class="h">/ ${state.items.length} kèo đang theo dõi</div></div>
+    <div class="stat"><div class="k">Việc hôm nay</div><div class="v">${dDone}/${dailyAll.length}</div><div class="bar"><i style="width:${pct}%"></i></div></div>
+    <div class="stat"><div class="k">Chờ TGE · Claim</div><div class="v">${waiting} · <span style="color:var(--acc2)">${claimable}</span></div><div class="h">${claimable?"Có kèo claim được, vào làm ngay!":"Chưa có kèo nào claim được"}</div></div>
+    <div class="stat"><div class="k">Đã bán được</div><div class="v" style="font-size:20px;color:var(--acc)">${fmtVND(soldTotal)}</div><div class="h">Tổng từ các kèo đã bán</div></div>`;
+  // filters
+  const counts={all:state.items.length};STATUSES.forEach(s=>counts[s.k]=state.items.filter(i=>i.status===s.k).length);
+  document.getElementById("filters").innerHTML=[{k:"all",label:"Tất cả"},...STATUSES].map(s=>`<button class="chip ${filter===s.k?"on":""}" data-f="${s.k}">${s.label} ${counts[s.k]||0}</button>`).join("");
+  // list
+  const ql=q.toLowerCase();
+  const prioOrder={high:0,mid:1,low:2};const stOrder={claim:0,farm:1,wait:2,sold:3,drop:4};
+  const items=state.items.filter(i=>(filter==="all"||i.status===filter)&&(!ql||(i.name+" "+i.chain+" "+i.note).toLowerCase().includes(ql)))
+    .sort((a,b)=>(stOrder[a.status]-stOrder[b.status])||(prioOrder[a.prio]-prioOrder[b.prio])||a.name.localeCompare(b.name));
+  const list=document.getElementById("list");
+  if(!items.length){list.innerHTML=`<div class="empty">Chưa có kèo nào ở đây. Bấm “+ Thêm kèo” để bắt đầu.</div>`}
+  else list.innerHTML=items.map(i=>{
+    const st=STATUSES.find(s=>s.k===i.status)||STATUSES[0];
+    const onceDone=i.once.filter(t=>i.doneOnce.includes(t.id)).length;
+    const web=safeUrl(i.web),x=safeUrl(i.x);
+    return `<div class="card ${i.status==="sold"||i.status==="drop"?"done":""}">
+      <div class="ch"><div><h3>${esc(i.name)}</h3>
+        <div class="meta"><span class="tag s-${st.k}">${st.label}</span>${i.chain?`<span class="tag">${esc(i.chain)}</span>`:""}<span class="tag">${esc(i.type)}</span><span class="tag ${i.prio==="high"?"p-high":""}">${PRIO[i.prio]||""}</span>${i.wallet?`<span class="tag">👛 ${esc(i.wallet)}</span>`:""}</div></div>
+        <button class="ghost" data-edit="${i.id}">Sửa</button></div>
+      ${i.daily.length?`<div class="tasks"><div class="hint">Hằng ngày</div>${i.daily.map(t=>`<label class="task ${isDoneToday(t.id)?"ok":""}"><input type="checkbox" data-daily="${t.id}" ${isDoneToday(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
+      ${i.once.length?`<div class="tasks"><div class="hint">Làm 1 lần · ${onceDone}/${i.once.length}</div>${i.once.map(t=>`<label class="task ${i.doneOnce.includes(t.id)?"ok":""}"><input type="checkbox" data-once="${i.id}|${t.id}" ${i.doneOnce.includes(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
+      ${(i.recv||Number(i.sold))?`<div class="money">${i.recv?"Nhận: "+esc(i.recv):""}${i.recv&&Number(i.sold)?" · ":""}${Number(i.sold)?"Bán: "+fmtVND(i.sold):""}</div>`:""}
+      ${(web||x)?`<div class="links">${web?`<a href="${esc(web)}" target="_blank" rel="noopener">🌐 Website</a>`:""}${x?`<a href="${esc(x)}" target="_blank" rel="noopener">𝕏 X</a>`:""}</div>`:""}
+      ${i.note?`<div class="note">${esc(i.note)}</div>`:""}
+    </div>`}).join("");
+  // today
+  const todo=act.flatMap(i=>i.daily.map(t=>({i,t})));
+  const left=todo.filter(x=>!isDoneToday(x.t.id));
+  document.getElementById("todayCount").textContent=todo.length?`${left.length} việc còn lại`:"";
+  document.getElementById("today").innerHTML=!todo.length?`<div class="empty" style="padding:12px">Chưa có việc hằng ngày.</div>`:
+    left.length?left.map(x=>`<label class="today-item"><input type="checkbox" data-daily="${x.t.id}"><b>${esc(x.i.name)}</b><span>${esc(x.t.t)}</span></label>`).join(""):`<div class="empty" style="padding:12px">🎉 Xong hết việc hôm nay rồi!</div>`;
+  // heat
+  let h="";for(let k=29;k>=0;k--){const d=todayStr(new Date(Date.now()-k*864e5));const c=state.activity[d]||0;h+=`<div class="${c>=5?"l3":c>=2?"l2":c>=1?"l1":""}" title="${d}: ${c} việc"></div>`}
+  document.getElementById("heat").innerHTML=h;
+  const s=streak();document.getElementById("streak").textContent=s?`🔥 ${s} ngày liên tiếp`:"";
+  // wallets
+  document.getElementById("wallets").innerHTML=!state.wallets.length?`<div class="hint">Chưa có ví nào.</div>`:state.wallets.map(w=>`<div class="wallet"><em>${esc(w.name)}</em><span title="${esc(w.addr)}">${esc(w.addr.slice(0,8)+"…"+w.addr.slice(-6))}</span><button class="ghost" data-copy="${esc(w.addr)}">Copy</button><button class="ghost danger" data-delw="${w.id}">✕</button></div>`).join("");
+}
+
+/* ---------- modal: item ---------- */
+const $=id=>document.getElementById(id);
+$("fStatus").innerHTML=STATUSES.map(s=>`<option value="${s.k}">${s.label}</option>`).join("");
+function openItem(id){
+  editingId=id||null;const i=id?state.items.find(x=>x.id===id):null;
+  $("mTitle").textContent=i?"Sửa kèo":"Thêm kèo";$("delBtn").style.visibility=i?"visible":"hidden";
+  $("fName").value=i?i.name:"";$("fChain").value=i?i.chain:"";$("fType").value=i?i.type:"Testnet";$("fStatus").value=i?i.status:"farm";
+  $("fPrio").value=i?i.prio:"mid";$("fWallet").value=i?i.wallet:"";$("fDaily").value=i?i.daily.map(t=>t.t).join("\n"):"";$("fOnce").value=i?i.once.map(t=>t.t).join("\n"):"";
+  $("fWeb").value=i?i.web:"";$("fX").value=i?i.x:"";$("fRecv").value=i?i.recv:"";$("fSold").value=i&&Number(i.sold)?i.sold:"";$("fNote").value=i?i.note:"";
+  $("mItem").classList.add("open");setTimeout(()=>$("fName").focus(),50);
+}
+function reconcile(old,text){const lines=text.split("\n").map(s=>s.trim()).filter(Boolean);return lines.map(l=>{const f=old.find(t=>t.t===l);return f||{id:uid(),t:l}})}
+$("saveBtn").onclick=()=>{
+  const name=$("fName").value.trim();if(!name){$("fName").focus();return}
+  let i=editingId?state.items.find(x=>x.id===editingId):null;
+  if(!i){i={id:uid(),daily:[],once:[],doneOnce:[],created:todayStr()};state.items.push(i)}
+  Object.assign(i,{name,chain:$("fChain").value.trim(),type:$("fType").value,status:$("fStatus").value,prio:$("fPrio").value,wallet:$("fWallet").value.trim(),
+    web:$("fWeb").value.trim(),x:$("fX").value.trim(),recv:$("fRecv").value.trim(),sold:Number($("fSold").value)||0,note:$("fNote").value.trim()});
+  i.daily=reconcile(i.daily,$("fDaily").value);i.once=reconcile(i.once,$("fOnce").value);
+  i.doneOnce=i.doneOnce.filter(id=>i.once.some(t=>t.id===id));
+  $("mItem").classList.remove("open");scheduleSave();render();toast("Đã lưu");
+};
+let delArm=false;
+$("delBtn").onclick=()=>{
+  if(!delArm){delArm=true;$("delBtn").textContent="Bấm lần nữa để xoá";setTimeout(()=>{delArm=false;$("delBtn").textContent="Xoá kèo"},2500);return}
+  if(!state.removed.includes(editingId))state.removed.push(editingId);state.items=state.items.filter(x=>x.id!==editingId);delArm=false;$("delBtn").textContent="Xoá kèo";
+  $("mItem").classList.remove("open");scheduleSave();render();toast("Đã xoá");
+};
+$("cancelBtn").onclick=()=>$("mItem").classList.remove("open");
+$("addBtn").onclick=()=>openItem(null);
+
+/* ---------- wallets ---------- */
+$("addWallet").onclick=()=>{$("wName").value="";$("wAddr").value="";$("wErr").textContent="";$("mWallet").classList.add("open")};
+$("wCancel").onclick=()=>$("mWallet").classList.remove("open");
+$("wSave").onclick=()=>{
+  const a=$("wAddr").value.trim();
+  if(a.split(/\s+/).length>=11){$("wErr").textContent="Cái này giống seed phrase! Tuyệt đối không lưu seed ở đây.";return}
+  if(/^(0x)?[0-9a-fA-F]{64}$/.test(a)){$("wErr").textContent="Cái này giống private key! Không lưu private key ở đây.";return}
+  if(!/^0x[0-9a-fA-F]{40}$/.test(a)){$("wErr").textContent="Địa chỉ EVM phải dạng 0x + 40 ký tự.";return}
+  state.wallets.push({id:uid(),name:$("wName").value.trim()||"Ví "+(state.wallets.length+1),addr:a});
+  $("mWallet").classList.remove("open");scheduleSave();render();
+};
+
+/* ---------- import/export ---------- */
+let dMode="export";
+$("exportBtn").onclick=()=>{dMode="export";$("dTitle").textContent="Sao lưu dữ liệu";$("dText").value=JSON.stringify(state,null,1);$("dAction").textContent="Copy";$("dErr").textContent="";$("mData").classList.add("open")};
+$("importBtn").onclick=()=>{dMode="import";$("dTitle").textContent="Nhập dữ liệu (ghi đè)";$("dText").value="";$("dAction").textContent="Nhập";$("dErr").textContent="";$("mData").classList.add("open")};
+$("dCancel").onclick=()=>$("mData").classList.remove("open");
+$("dAction").onclick=async()=>{
+  if(dMode==="export"){try{await navigator.clipboard.writeText($("dText").value);toast("Đã copy")}catch(e){$("dText").select();$("dErr").textContent="Không copy tự động được — bôi đen và Ctrl+C nhé."}return}
+  try{const s=normalize(JSON.parse($("dText").value));if(!s)throw 0;state=s;$("mData").classList.remove("open");scheduleSave();render();toast("Đã nhập")}
+  catch(e){$("dErr").textContent="JSON không hợp lệ."}
+};
+
+/* ---------- events ---------- */
+document.addEventListener("change",e=>{
+  const d=e.target.dataset;
+  if(d.daily){toggleDaily(d.daily)}
+  else if(d.once){const [iid,tid]=d.once.split("|");const it=state.items.find(x=>x.id===iid);if(it)toggleOnce(it,tid)}
+});
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-f],[data-edit],[data-copy],[data-delw]");if(!t)return;
+  if(t.dataset.f){filter=t.dataset.f;render()}
+  else if(t.dataset.edit)openItem(t.dataset.edit);
+  else if(t.dataset.copy){try{await navigator.clipboard.writeText(t.dataset.copy);toast("Đã copy địa chỉ")}catch(err){toast("Không copy được")}}
+  else if(t.dataset.delw){state.wallets=state.wallets.filter(w=>w.id!==t.dataset.delw);scheduleSave();render()}
+});
+$("q").addEventListener("input",e=>{q=e.target.value;render()});
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".modal.open").forEach(m=>m.classList.remove("open"))});
+let tt;function toast(s){const el=$("toast");el.textContent=s;el.style.display="block";clearTimeout(tt);tt=setTimeout(()=>el.style.display="none",1600)}
+// re-render at midnight so daily tasks reset
+let lastDay=todayStr();setInterval(()=>{if(todayStr()!==lastDay){lastDay=todayStr();render()}},60000);
+
+init();
+})();
+</script>
+</body>
+</html>
