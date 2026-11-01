@@ -1,5 +1,6 @@
 {
   "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập.",
+  "repo": "phuclt093/LT_AirdropTracker",
   "airdrops": [
     {
       "id": "flop-labs",

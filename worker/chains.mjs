@@ -5,6 +5,7 @@ export const CHAINS = {
     name: "Arc Testnet",
     chainId: 5042002,
     rpc: process.env.ARC_RPC || "https://rpc.testnet.arc.network",
+    // Quy ước: biến môi trường <KEY>_RPC để ghi đè RPC (test giả lập dùng cái này)
     explorer: "https://testnet.arcscan.app",
     faucet: "https://faucet.circle.com",
     nativeSymbol: "USDC",

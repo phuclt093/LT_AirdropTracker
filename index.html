@@ -98,6 +98,13 @@ button.danger{color:var(--bad)}
 .spark{display:flex;gap:2px;align-items:flex-end;height:22px;margin-top:8px}
 .spark i{flex:1;background:#2f7a52;border-radius:2px;min-height:2px}
 .spark i.z{background:var(--panel2)}
+.req{font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid #463a6a;color:var(--violet);background:none}
+.req.ok{border-color:#2f5a44;color:var(--acc)}
+.week h3{margin:0 0 4px;font-size:14px}
+.week ol{margin:8px 0 0;padding-left:18px;font-size:13px}
+.week ol li{margin-bottom:6px}
+.week ol li b{color:var(--acc2);font-weight:600}
+.week .pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:6px;background:#0e1218;border:1px solid var(--line);margin:2px 4px 0 0}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#06240f;padding:8px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
 </style>
 </head>
@@ -110,6 +117,7 @@ button.danger{color:var(--bad)}
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <div class="sync"><i class="dot" id="syncDot"></i><span id="syncTxt">Đang tải…</span></div>
+      <button id="suggestBtn" title="Nhờ Claude kiểm tra một kèo bạn thấy">💡 Đề xuất kèo</button>
       <button class="pri" id="addBtn">+ Thêm kèo</button>
     </div>
   </header>
@@ -127,6 +135,10 @@ button.danger{color:var(--bad)}
     </div>
 
     <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="panel week" id="weekPanel">
+        <h2>📅 Hướng dẫn tuần này <span class="sub" id="weekDate"></span></h2>
+        <div id="week"></div>
+      </div>
       <div class="panel">
         <h2>Hôm nay cần làm <span class="sub" id="todayCount"></span></h2>
         <div id="today"></div>
@@ -211,6 +223,19 @@ button.danger{color:var(--bad)}
   </div>
 </div>
 
+<!-- Modal: nhờ Claude -->
+<div class="modal" id="mReq">
+  <div class="mbox">
+    <h2 id="rTitle">Nhờ Claude viết tool</h2>
+    <div class="hint" id="rIntro" style="margin-bottom:10px"></div>
+    <div class="f" id="rNameRow"><label>Tên dự án *</label><input id="rName" placeholder="vd: Pharos"></div>
+    <div class="f"><label id="rWhatLabel">Bạn muốn tool làm gì?</label><textarea id="rWhat" rows="4"></textarea></div>
+    <div class="f"><label>Link chính thức (nếu có)</label><input id="rLink" placeholder="https://x.com/... hoặc docs"></div>
+    <div class="hint">Bấm gửi sẽ mở GitHub để tạo yêu cầu (issue). Sáng thứ Hai Claude sẽ xử lý và gửi Pull Request cho bạn duyệt. Máy nhà tự cập nhật sau khi bạn merge.</div>
+    <div class="mfoot"><span></span><div style="display:flex;gap:8px"><button id="rCancel">Huỷ</button><a class="pri" id="rSend" target="_blank" rel="noopener" style="text-decoration:none;padding:8px 12px;border-radius:9px;background:var(--acc);color:#06240f;font-weight:600">Gửi yêu cầu ↗</a></div></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -242,11 +267,20 @@ async function loadRepoList(){
   try{const r=await fetch("airdrops.json",{cache:"no-store"});if(!r.ok)return [];const j=await r.json();return Array.isArray(j.airdrops)?j.airdrops:[]}
   catch(e){return []}
 }
+function guessRepo(){const h=location.hostname.match(/^([^.]+)\.github\.io$/);const seg=location.pathname.split("/").filter(Boolean)[0];return h&&seg?h[1]+"/"+seg:""}
+/* Yêu cầu đang mở trên GitHub (API công khai, không cần đăng nhập) */
+async function loadRequests(){
+  if(!repoSlug)return;
+  const list=await fetchJson("https://api.github.com/repos/"+repoSlug+"/issues?state=open&per_page=100");
+  if(!Array.isArray(list))return;
+  requests={};list.forEach(it=>{const m=(it.title||"").match(/^\[(Tool|Kèo)\]\s*(.+)$/i);if(m)requests[m[2].trim().toLowerCase()]={type:m[1],url:it.html_url}});
+  render();
+}
 async function fetchJson(u){try{const r=await fetch(u,{cache:"no-store"});return r.ok?await r.json():null}catch(e){return null}}
 function emptyState(){return {version:1,items:[],wallets:[],dailyDone:{},activity:{},removed:[]}}
 
 let state=null, filter="all", q="", editingId=null, mode="local";
-let repoById={}, onchain={stats:null,runs:null};
+let repoById={}, onchain={stats:null,runs:null}, weekly=null, repoSlug="", requests={};
 
 /* ---------- persistence: localStorage trên trình duyệt ---------- */
 function setSync(m,txt){mode=m;const d=document.getElementById("syncDot");d.className="dot "+(m==="ok"?"ok":"local");document.getElementById("syncTxt").textContent=txt}
@@ -263,7 +297,9 @@ function normalize(s){
 async function init(){
   state=normalize(loadLocal())||emptyState();
   render();
-  const [repo,stats,runs]=await Promise.all([loadRepoList(),fetchJson("data/stats.json"),fetchJson("data/runs.json")]);
+  const [repo,stats,runs,wk,meta]=await Promise.all([loadRepoList(),fetchJson("data/stats.json"),fetchJson("data/runs.json"),fetchJson("data/weekly.json"),fetchJson("airdrops.json")]);
+  weekly=wk;repoSlug=(meta&&meta.repo)||guessRepo();
+  loadRequests();
   repo.forEach(j=>{if(j.id)repoById[j.id]=j});
   onchain={stats,runs};
   // thêm kèo mới từ airdrops.json (không ghi đè kèo bạn đã sửa / đã xoá)
@@ -329,6 +365,14 @@ function onchainPanel(i){
     ${runHtml}${low}</div>`;
 }
 
+function toolBadge(i){
+  if(chainKeyOf(i))return `<span class="req ok" title="Worker máy nhà đang farm kèo này">🤖 Có tool</span>`;
+  const r=requests[i.name.toLowerCase()];
+  if(r)return `<a class="req" href="${esc(r.url)}" target="_blank" rel="noopener" style="text-decoration:none">⏳ Đã nhờ Claude</a>`;
+  if(i.status!=="farm")return "";
+  return `<button class="req" data-req="${i.id}">🤖 Nhờ viết tool</button>`;
+}
+
 /* ---------- render ---------- */
 function render(){
   const now=new Date();
@@ -363,7 +407,7 @@ function render(){
     return `<div class="card ${i.status==="sold"||i.status==="drop"?"done":""}">
       <div class="ch"><div><h3>${esc(i.name)}</h3>
         <div class="meta"><span class="tag s-${st.k}">${st.label}</span>${i.chain?`<span class="tag">${esc(i.chain)}</span>`:""}<span class="tag">${esc(i.type)}</span><span class="tag ${i.prio==="high"?"p-high":""}">${PRIO[i.prio]||""}</span>${i.wallet?`<span class="tag">👛 ${esc(i.wallet)}</span>`:""}</div></div>
-        <button class="ghost" data-edit="${i.id}">Sửa</button></div>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${toolBadge(i)}<button class="ghost" data-edit="${i.id}">Sửa</button></div></div>
       ${i.daily.length?`<div class="tasks"><div class="hint">Hằng ngày</div>${i.daily.map(t=>`<label class="task ${isDoneToday(t.id)?"ok":""}"><input type="checkbox" data-daily="${t.id}" ${isDoneToday(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
       ${i.once.length?`<div class="tasks"><div class="hint">Làm 1 lần · ${onceDone}/${i.once.length}</div>${i.once.map(t=>`<label class="task ${i.doneOnce.includes(t.id)?"ok":""}"><input type="checkbox" data-once="${i.id}|${t.id}" ${i.doneOnce.includes(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
       ${onchainPanel(i)}
@@ -381,6 +425,17 @@ function render(){
   let h="";for(let k=29;k>=0;k--){const d=todayStr(new Date(Date.now()-k*864e5));const c=state.activity[d]||0;h+=`<div class="${c>=5?"l3":c>=2?"l2":c>=1?"l1":""}" title="${d}: ${c} việc"></div>`}
   document.getElementById("heat").innerHTML=h;
   const s=streak();document.getElementById("streak").textContent=s?`🔥 ${s} ngày liên tiếp`:"";
+  // weekly
+  const wEl=document.getElementById("week");
+  if(!weekly){wEl.innerHTML=`<div class="hint">Chưa tải được hướng dẫn.</div>`}
+  else{
+    document.getElementById("weekDate").textContent=weekly.week?("tuần "+new Date(weekly.week).toLocaleDateString("vi-VN")):"";
+    wEl.innerHTML=`<h3>${esc(weekly.title||"")}</h3><div class="note" style="margin-top:0">${esc(weekly.summary||"")}</div>
+      ${(weekly.steps||[]).length?`<ol>${weekly.steps.map(st=>`<li>${st.keo?`<b>${esc(st.keo)}</b> · `:""}${esc(st.text)}${safeUrl(st.link)?` <a href="${esc(safeUrl(st.link))}" target="_blank" rel="noopener" style="color:var(--acc2)">↗</a>`:""}</li>`).join("")}</ol>`:""}
+      ${(weekly.new||[]).length?`<div style="margin-top:8px" class="hint">Kèo mới: ${weekly.new.map(n=>`<span class="pill">🆕 ${esc(n)}</span>`).join("")}</div>`:""}
+      ${(weekly.tools||[]).length?`<div style="margin-top:4px" class="hint">Tool mới: ${weekly.tools.map(n=>`<span class="pill">🤖 ${esc(n)}</span>`).join("")}</div>`:""}
+      ${weekly.pr&&safeUrl(weekly.pr)?`<div style="margin-top:8px"><a href="${esc(safeUrl(weekly.pr))}" target="_blank" rel="noopener" style="color:var(--acc2);font-size:12px">Xem Pull Request tuần này ↗</a></div>`:""}`;
+  }
   // wallets
   document.getElementById("wallets").innerHTML=!state.wallets.length?`<div class="hint">Chưa có ví nào.</div>`:state.wallets.map(w=>`<div class="wallet"><em>${esc(w.name)}</em><span title="${esc(w.addr)}">${esc(w.addr.slice(0,8)+"…"+w.addr.slice(-6))}</span><button class="ghost" data-copy="${esc(w.addr)}">Copy</button><button class="ghost danger" data-delw="${w.id}">✕</button></div>`).join("");
 }
@@ -416,6 +471,39 @@ $("delBtn").onclick=()=>{
 $("cancelBtn").onclick=()=>$("mItem").classList.remove("open");
 $("addBtn").onclick=()=>openItem(null);
 
+/* ---------- nhờ Claude (tạo issue trên GitHub) ---------- */
+let reqItem=null,reqType="Tool";
+function openReq(type,item){
+  reqType=type;reqItem=item||null;
+  $("rTitle").textContent=type==="Tool"?"🤖 Nhờ Claude viết tool":"💡 Đề xuất kèo mới";
+  $("rIntro").textContent=type==="Tool"?("Kèo: "+(item?item.name:"")+(item&&item.chain?" · "+item.chain:"")):"Claude sẽ kiểm tra kèo có thật không, có rủi ro scam không, rồi thêm vào danh sách nếu ổn.";
+  $("rNameRow").style.display=type==="Tool"?"none":"";
+  $("rWhatLabel").textContent=type==="Tool"?"Bạn muốn tool làm gì? (vd: tự swap, tự check-in, tự mint NFT…)":"Bạn thấy kèo này ở đâu / có gì đáng chú ý?";
+  $("rName").value="";$("rWhat").value="";$("rLink").value=item?(item.x||item.web||""):"";
+  updateReqLink();$("mReq").classList.add("open");
+}
+function updateReqLink(){
+  const name=reqType==="Tool"?(reqItem?reqItem.name:""):$("rName").value.trim();
+  const title=`[${reqType}] ${name||"..."}`;
+  const lines=reqType==="Tool"?[
+    "### Kèo","- Tên: "+name,"- id: `"+(reqItem?reqItem.id:"")+"`","- Mạng: "+(reqItem?reqItem.chain:""),
+    "","### Muốn tool làm gì",$("rWhat").value.trim()||"(chưa ghi)","","### Link",$("rLink").value.trim()||"(chưa có)",
+    "","---","_Gửi từ Airdrop Tracker. Claude xử lý vào sáng thứ Hai và mở Pull Request._"
+  ]:[
+    "### Kèo đề xuất","- Tên: "+name,"","### Ghi chú",$("rWhat").value.trim()||"(chưa ghi)","","### Link",$("rLink").value.trim()||"(chưa có)",
+    "","---","_Gửi từ Airdrop Tracker. Claude kiểm tra vào sáng thứ Hai._"
+  ];
+  const ok=!!repoSlug&&!!name;
+  $("rSend").href=ok?`https://github.com/${repoSlug}/issues/new?title=${encodeURIComponent(title)}&labels=${reqType==="Tool"?"tool-request":"keo-request"}&body=${encodeURIComponent(lines.join("\n"))}`:"#";
+  $("rSend").style.opacity=ok?1:.5;
+}
+["rName","rWhat","rLink"].forEach(id=>$(id).addEventListener("input",updateReqLink));
+$("rSend").addEventListener("click",e=>{if($("rSend").getAttribute("href")==="#"){e.preventDefault();return}
+  if(reqItem)requests[reqItem.name.toLowerCase()]={type:reqType,url:"https://github.com/"+repoSlug+"/issues"};
+  setTimeout(()=>{$("mReq").classList.remove("open");render();toast("Đã mở GitHub — bấm Submit để gửi")},300)});
+$("rCancel").onclick=()=>$("mReq").classList.remove("open");
+$("suggestBtn").onclick=()=>openReq("Kèo",null);
+
 /* ---------- wallets ---------- */
 $("addWallet").onclick=()=>{$("wName").value="";$("wAddr").value="";$("wErr").textContent="";$("mWallet").classList.add("open")};
 $("wCancel").onclick=()=>$("mWallet").classList.remove("open");
@@ -446,7 +534,8 @@ document.addEventListener("change",e=>{
   else if(d.once){const [iid,tid]=d.once.split("|");const it=state.items.find(x=>x.id===iid);if(it)toggleOnce(it,tid)}
 });
 document.addEventListener("click",async e=>{
-  const t=e.target.closest("[data-f],[data-edit],[data-copy],[data-delw]");if(!t)return;
+  const t=e.target.closest("[data-f],[data-edit],[data-copy],[data-delw],[data-req]");if(!t)return;
+  if(t.dataset.req){openReq("Tool",state.items.find(x=>x.id===t.dataset.req));return}
   if(t.dataset.f){filter=t.dataset.f;render()}
   else if(t.dataset.edit)openItem(t.dataset.edit);
   else if(t.dataset.copy){try{await navigator.clipboard.writeText(t.dataset.copy);toast("Đã copy địa chỉ")}catch(err){toast("Không copy được")}}

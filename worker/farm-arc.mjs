@@ -13,7 +13,7 @@ import { updateStats } from "./stats.mjs";
 
 const chain = CHAINS.arc;
 const RUNS_FILE = join(DATA_DIR, "runs.json");
-const STATE_FILE = join(WORKER_DIR, "state", "arc.json");
+const STATE_FILE = join(process.env.AIRDROP_STATE_DIR || join(WORKER_DIR, "state"), "arc.json");
 const ERC20 = [
   "function balanceOf(address) view returns (uint256)",
   "function transfer(address,uint256) returns (bool)",
@@ -129,7 +129,9 @@ async function main() {
   for (let i = 0; i < plan.length; i++) {
     const k = plan[i];
     try {
-      const tx = await actions[k].run();
+      let tx;
+      try { tx = await actions[k].run(); }
+      catch (e1) { log("tx_retry", { type: k, error: String(e1.shortMessage || e1.message).slice(0, 120) }); await sleep(8000); tx = await actions[k].run(); }
       const rc = await tx.wait(1, 120_000);
       tx._afterMine?.(rc);
       done.push({ type: k, hash: tx.hash, ok: rc?.status === 1 });

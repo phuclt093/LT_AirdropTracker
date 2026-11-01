@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, appendFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync, existsSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 
 export const WORKER_DIR = dirname(fileURLToPath(import.meta.url));
 export const REPO_DIR = join(WORKER_DIR, "..");
-export const DATA_DIR = join(REPO_DIR, "data");
+export const DATA_DIR = process.env.AIRDROP_DATA_DIR || join(REPO_DIR, "data");
 export const LOG_DIR = join(WORKER_DIR, "logs");
 
 export const DRY = process.env.DRY_RUN === "1";
@@ -86,14 +86,16 @@ export function pushData(message) {
 }
 
 export function lockOrExit(name) {
-  const f = join(WORKER_DIR, "state", `${name}.lock`);
+  const f = join(process.env.AIRDROP_STATE_DIR || join(WORKER_DIR, "state"), `${name}.lock`);
   mkdirSync(dirname(f), { recursive: true });
   if (existsSync(f)) {
-    const age = Date.now() - Number(readFileSync(f, "utf8") || 0);
-    if (age < 2 * 3600e3) { console.log(`Đang có tiến trình ${name} khác chạy — bỏ qua.`); process.exit(0); }
+    const [pid, ts] = String(readFileSync(f, "utf8")).split(":").map(Number);
+    let alive = false;
+    try { if (pid) { process.kill(pid, 0); alive = true; } } catch {}
+    if (alive && Date.now() - ts < 2 * 3600e3) { console.log(`Đang có tiến trình ${name} khác chạy (pid ${pid}) — bỏ qua.`); process.exit(0); }
   }
-  writeFileSync(f, String(Date.now()));
-  const release = () => { try { writeFileSync(f, ""); execFileSync("rm", ["-f", f]); } catch {} };
+  writeFileSync(f, `${process.pid}:${Date.now()}`);
+  const release = () => { try { rmSync(f, { force: true }); } catch {} };
   process.on("exit", release);
   return release;
 }

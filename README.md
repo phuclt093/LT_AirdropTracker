@@ -8,7 +8,8 @@ Bộ công cụ nhỏ để theo dõi các kèo farm airdrop, chạy **miễn ph
 | `airdrops.json` | Trong repo | Danh sách kèo dùng chung cho web và bot |
 | `scripts/remind.mjs` | GitHub Actions (cron) | Mỗi sáng 7:47 gửi danh sách việc cần làm về Telegram |
 | `worker/` | Máy nhà (systemd) | Tự farm testnet (hiện có Arc) + đẩy số liệu on-chain lên web, xem [worker/README.md](worker/README.md) |
-| `data/` | Worker tự cập nhật | `stats.json` (số liệu ví), `runs.json` (kết quả các lần farm) |
+| `data/` | Worker tự cập nhật | `stats.json` (số liệu ví), `runs.json` (kết quả các lần farm), `weekly.json` (hướng dẫn tuần) |
+| `docs/WEEKLY.md` | Claude, sáng thứ Hai | Dò kèo mới, viết tool theo yêu cầu, cập nhật hướng dẫn tuần, gửi 1 Pull Request để bạn duyệt |
 
 ---
 
@@ -75,7 +76,13 @@ Từ đó trở đi, sáng nào bot cũng tự nhắn. Muốn đổi giờ thì 
 
 **Cách 2: bấm "+ Thêm kèo" ngay trên web.** Cách này nhanh, nhưng kèo chỉ lưu trên trình duyệt đó và bot Telegram không thấy.
 
-## 5. Chạy thử trên máy
+## 5. Nhờ Claude viết tool / đề xuất kèo
+
+- Trên mỗi kèo đang farm có nút **🤖 Nhờ viết tool**, còn trên đầu trang có nút **💡 Đề xuất kèo**. Bấm vào, ghi bạn muốn gì, rồi bấm **Gửi yêu cầu**. GitHub sẽ mở sẵn một issue, bạn chỉ cần bấm **Submit**.
+- Sáng thứ Hai, Claude xử lý tất cả yêu cầu và gửi **1 Pull Request**. Bạn đọc qua rồi bấm **Merge**.
+- Khoảng 4h sáng hôm sau, máy nhà tự `git pull`, thấy tool mới thì tự tạo lịch chạy. Có Telegram thì bạn sẽ nhận được tin báo.
+
+## 6. Chạy thử trên máy
 
 ```bash
 # Xem tin nhắn bot sẽ gửi (không gửi thật)
