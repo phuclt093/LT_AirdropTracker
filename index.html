@@ -129,6 +129,13 @@ ol.gsteps .gdone input{width:16px;height:16px;accent-color:var(--acc);padding:0;
 .xbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .xb{font-size:12px;padding:3px 10px;border-radius:6px;background:#000;color:#fff;border:1px solid #444;text-decoration:none;font-weight:600}
 .xb:hover{border-color:#fff}
+.toolbox{margin-top:10px;border:1px solid #2f5a44;border-radius:10px;background:#0f1d16;padding:10px 12px}
+.toolbox .tt{font-weight:600;font-size:13px;color:var(--acc)}
+.toolbox .tn{font-size:12px;color:#c5ccd6;margin:4px 0 8px}
+.toolbox .dl{display:inline-block;margin:0 6px 6px 0;font-size:12px;font-weight:600;padding:5px 12px;border-radius:7px;background:var(--acc);color:#06240f;text-decoration:none}
+.osrow{display:flex;gap:8px;flex-wrap:wrap}
+.osrow label{display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);cursor:pointer;font-size:13px}
+.osrow input{width:15px;height:15px;accent-color:var(--acc);padding:0;margin:0}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#06240f;padding:8px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
 </style>
 </head>
@@ -254,9 +261,11 @@ ol.gsteps .gdone input{width:16px;height:16px;accent-color:var(--acc);padding:0;
     <h2 id="rTitle">Nhờ Claude viết tool</h2>
     <div class="hint" id="rIntro" style="margin-bottom:10px"></div>
     <div class="f" id="rNameRow"><label>Tên dự án *</label><input id="rName" placeholder="vd: Pharos"></div>
+    <div class="f" id="rOsRow"><label>Tool chạy trên máy nào?</label>
+      <div class="osrow"><label><input type="radio" name="rOs" value="Cả hai" checked>🐧 + 🪟 Cả hai</label><label><input type="radio" name="rOs" value="Linux">🐧 Linux</label><label><input type="radio" name="rOs" value="Windows">🪟 Windows</label></div></div>
     <div class="f"><label id="rWhatLabel">Bạn muốn tool làm gì?</label><textarea id="rWhat" rows="4"></textarea></div>
     <div class="f"><label>Link chính thức (nếu có)</label><input id="rLink" placeholder="https://x.com/... hoặc docs"></div>
-    <div class="hint">Bấm gửi sẽ mở GitHub để tạo yêu cầu (issue). Sáng thứ Hai Claude sẽ xử lý và gửi Pull Request cho bạn duyệt. Máy nhà tự cập nhật sau khi bạn merge.</div>
+    <div class="hint">Bấm gửi sẽ mở GitHub để tạo yêu cầu (issue). Sáng thứ Hai Claude viết tool, đóng gói thành app và đưa lên mục Tải về — kèo đó sẽ có nút ⬇️ Tải tool.</div>
     <div class="mfoot"><span></span><div style="display:flex;gap:8px"><button id="rCancel">Huỷ</button><a class="pri" id="rSend" target="_blank" rel="noopener" style="text-decoration:none;padding:8px 12px;border-radius:9px;background:var(--acc);color:#06240f;font-weight:600">Gửi yêu cầu ↗</a></div></div>
   </div>
 </div>
@@ -305,7 +314,7 @@ async function fetchJson(u){try{const r=await fetch(u,{cache:"no-store"});return
 function emptyState(){return {version:1,items:[],wallets:[],dailyDone:{},activity:{},removed:[]}}
 
 let state=null, filter="all", q="", editingId=null, mode="local";
-let openGuides=new Set(), repoById={}, onchain={stats:null,runs:null}, weekly=null, repoSlug="", requests={};
+let openGuides=new Set(), repoById={}, weekly=null, repoSlug="", requests={};
 
 /* ---------- persistence: localStorage trên trình duyệt ---------- */
 function setSync(m,txt){mode=m;const d=document.getElementById("syncDot");d.className="dot "+(m==="ok"?"ok":"local");document.getElementById("syncTxt").textContent=txt}
@@ -401,13 +410,12 @@ function normalize(s){
 async function init(){
   state=normalize(loadLocal())||emptyState();
   render();
-  const [repo,stats,runs,wk,meta]=await Promise.all([loadRepoList(),fetchJson("data/stats.json"),fetchJson("data/runs.json"),fetchJson("data/weekly.json"),fetchJson("airdrops.json")]);
+  const [repo,wk,meta]=await Promise.all([loadRepoList(),fetchJson("data/weekly.json"),fetchJson("airdrops.json")]);
   weekly=wk;repoSlug=(meta&&meta.repo)||guessRepo();
   cloud.api=(meta&&meta.syncApi)||"";
   if(cloud.api){cloud.token=lsGet(TK_KEY);cloud.addr=lsGet(TA_KEY)}
   loadRequests();
   repo.forEach(j=>{if(j.id)repoById[j.id]=j});
-  onchain={stats,runs};
   // thêm kèo mới từ airdrops.json (không ghi đè kèo bạn đã sửa / đã xoá)
   // đồng bộ kèo gốc từ airdrops.json (trừ kèo bạn đã tự sửa)
   let synced=0;
@@ -457,35 +465,16 @@ function streak(){
   return n;
 }
 
-/* ---------- số liệu on-chain do worker trên máy nhà đẩy lên ---------- */
-function chainKeyOf(i){return i.onchain||(repoById[i.id]&&repoById[i.id].onchain)||""}
-function ago(iso){if(!iso)return"";const m=Math.round((Date.now()-new Date(iso))/60000);if(m<60)return m+" phút trước";const h=Math.round(m/60);if(h<48)return h+" giờ trước";return Math.round(h/24)+" ngày trước"}
-const ACTION_VI={nativeSelf:"gửi USDC",usdcErc20Self:"chuyển USDC",usdcApprove:"approve",eurcSelf:"chuyển EURC",deploy:"deploy contract",pokeContract:"gọi contract"};
-function onchainPanel(i){
-  const key=chainKeyOf(i);if(!key)return"";
-  const c=onchain.stats&&onchain.stats.chains&&onchain.stats.chains[key];
-  const run=onchain.runs&&onchain.runs[key]&&onchain.runs[key].last;
-  if(!c||!c.wallets||!c.wallets.length)return `<div class="chainbox"><div class="top"><span>⛓ On-chain · ${esc(key)}</span></div><div class="hint">Chưa có số liệu. Cài worker trên máy nhà (worker/README.md) để tự farm và hiện số liệu ở đây.</div></div>`;
-  const w=c.wallets[0];
-  const tok=Object.entries(w.tokens||{}).map(([k,v])=>`<div class="n"><b>${v}</b><span>${esc(k)}</span></div>`).join("");
-  // 14 ngày gần nhất: số giao dịch mỗi ngày (chênh lệch nonce)
-  const h=w.history||{};const days=[];let prev=(w.base!=null?w.base:null);const keys=Object.keys(h).sort();
-  const byDay={};keys.forEach(d=>{byDay[d]=prev===null?0:Math.max(0,h[d]-prev);prev=h[d]});
-  for(let k=13;k>=0;k--){const d=todayStr(new Date(Date.now()-k*864e5));days.push(byDay[d]||0)}
-  const mx=Math.max(1,...days);
-  let runHtml="";
-  if(run){
-    if(run.skipped)runHtml=`<div class="run">😴 Worker nghỉ ${ago(run.at)} (cho giống người thật)</div>`;
-    else if(run.ok)runHtml=`<div class="run ok">✅ Worker chạy ${ago(run.at)}: ${run.txCount} giao dịch${run.actions&&run.actions.length?" ("+run.actions.map(a=>ACTION_VI[a.type]||a.type).join(", ")+")":""}</div>`;
-    else runHtml=`<div class="run err">❌ Worker lỗi ${ago(run.at)}: ${esc(run.error||"không rõ")}</div>`;
-  }
-  const low=w.balance<1?`<div class="run err">⚠️ Sắp hết ${esc(c.symbol||"gas")} — <a href="${esc(safeUrl(c.faucet))}" target="_blank" rel="noopener" style="color:var(--acc2)">xin faucet</a></div>`:"";
-  return `<div class="chainbox"><div class="top"><span>⛓ ${esc(c.name)} · ${esc(w.label)} ${esc(w.short)}</span><span>cập nhật ${ago(onchain.stats.updated)}</span></div>
-    <div class="nums"><div class="n"><b>${w.nonce}</b><span>giao dịch</span></div><div class="n"><b>${w.activeDays}</b><span>ngày hoạt động</span></div><div class="n"><b>${w.balance}</b><span>${esc(c.symbol)}</span></div>${tok}</div>
-    <div class="spark" title="Số giao dịch mỗi ngày, 14 ngày gần nhất">${days.map(v=>`<i class="${v?"":"z"}" style="height:${v?Math.max(15,v/mx*100):10}%"></i>`).join("")}</div>
-    ${runHtml}${low}</div>`;
+/* ---------- tool farm (app tải về máy) ---------- */
+function toolOf(i){const r=repoById[i.id];return r&&r.tool&&r.tool.downloads?r.tool:null}
+function toolPanel(i){
+  const t=toolOf(i);if(!t)return "";
+  const L=safeUrl(t.downloads.linux),W=safeUrl(t.downloads.windows),R=safeUrl(t.release);
+  return `<div class="toolbox"><div class="tt">🤖 ${esc(t.name||"Tool")} · v${esc(t.version||"")}</div>
+    ${t.notes?`<div class="tn">${esc(t.notes)}</div>`:""}
+    ${L?`<a class="dl" href="${esc(L)}">⬇️ Tải cho Linux</a>`:""}${W?`<a class="dl" href="${esc(W)}">⬇️ Tải cho Windows</a>`:""}
+    <div class="hint">Giải nén → mở app → chọn <b>1</b> dán private key ví farm → <b>2</b> kiểm tra → <b>6</b> bật tự chạy mỗi ngày. Key chỉ lưu trên máy bạn.${R?` · <a href="${esc(R)}" target="_blank" rel="noopener" style="color:var(--acc2)">Trang phát hành ↗</a>`:""}</div></div>`;
 }
-
 /* ---------- MetaMask: kết nối ví + thêm mạng 1 click (chỉ đọc địa chỉ, KHÔNG ký giao dịch) ---------- */
 let mm={account:null,chainId:null};
 const eth=()=>window.ethereum||null;
@@ -560,7 +549,7 @@ function guidePanel(i){
       return `<li class="${ok?"ok":""}"><div class="num">${ok?"✓":k+1}</div><div style="flex:1;min-width:0"><div class="gt">${esc(st.t)}</div>${st.d?`<div class="gd">${esc(st.d)}</div>`:""}${xButtons(st)}${L?`<a class="gl" href="${esc(L)}" target="_blank" rel="noopener">Mở ${esc(st.lt||"link")} ↗</a>`:""}</div><label class="gdone"><input type="checkbox" data-gstep="${i.id}|${k}" ${ok?"checked":""}>xong</label></li>`}).join("")}</ol></details>`;
 }
 function toolBadge(i){
-  if(chainKeyOf(i))return `<span class="req ok" title="Worker máy nhà đang farm kèo này">🤖 Có tool</span>`;
+  if(toolOf(i))return `<span class="req ok" title="Có app tool để tải — xem khung 🤖 bên dưới">🤖 Có tool</span>`;
   const r=requests[i.name.toLowerCase()];
   if(r)return `<a class="req" href="${esc(r.url)}" target="_blank" rel="noopener" style="text-decoration:none">⏳ Đã nhờ Claude</a>`;
   if(i.status!=="farm")return "";
@@ -605,7 +594,7 @@ function render(){
       ${i.daily.length?`<div class="tasks"><div class="hint">Hằng ngày</div>${i.daily.map(t=>`<label class="task ${isDoneToday(t.id)?"ok":""}"><input type="checkbox" data-daily="${t.id}" ${isDoneToday(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
       ${i.once.length?`<div class="tasks"><div class="hint">Làm 1 lần · ${onceDone}/${i.once.length}</div>${i.once.map(t=>`<label class="task ${i.doneOnce.includes(t.id)?"ok":""}"><input type="checkbox" data-once="${i.id}|${t.id}" ${i.doneOnce.includes(t.id)?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}</div>`:""}
       ${guidePanel(i)}
-      ${onchainPanel(i)}
+      ${toolPanel(i)}
       ${(i.recv||Number(i.sold))?`<div class="money">${i.recv?"Nhận: "+esc(i.recv):""}${i.recv&&Number(i.sold)?" · ":""}${Number(i.sold)?"Bán: "+fmtVND(i.sold):""}</div>`:""}
       ${(web||x)?`<div class="links">${web?`<a href="${esc(web)}" target="_blank" rel="noopener">🌐 Website</a>`:""}${x?`<a href="${esc(x)}" target="_blank" rel="noopener">𝕏 X</a>`:""}</div>`:""}
       ${i.note?`<div class="note">${esc(i.note)}</div>`:""}
@@ -675,6 +664,8 @@ function openReq(type,item){
   $("rTitle").textContent=type==="Tool"?"🤖 Nhờ Claude viết tool":"💡 Đề xuất kèo mới";
   $("rIntro").textContent=type==="Tool"?("Kèo: "+(item?item.name:"")+(item&&item.chain?" · "+item.chain:"")):"Claude sẽ kiểm tra kèo có thật không, có rủi ro scam không, rồi thêm vào danh sách nếu ổn.";
   $("rNameRow").style.display=type==="Tool"?"none":"";
+  $("rOsRow").style.display=type==="Tool"?"":"none";
+  const def=document.querySelector('input[name="rOs"][value="Cả hai"]');if(def)def.checked=true;
   $("rWhatLabel").textContent=type==="Tool"?"Bạn muốn tool làm gì? (vd: tự swap, tự check-in, tự mint NFT…)":"Bạn thấy kèo này ở đâu / có gì đáng chú ý?";
   $("rName").value="";$("rWhat").value="";$("rLink").value=item?(item.x||item.web||""):"";
   updateReqLink();$("mReq").classList.add("open");
@@ -684,6 +675,7 @@ function updateReqLink(){
   const title=`[${reqType}] ${name||"..."}`;
   const lines=reqType==="Tool"?[
     "### Kèo","- Tên: "+name,"- id: `"+(reqItem?reqItem.id:"")+"`","- Mạng: "+(reqItem?reqItem.chain:""),
+    "","### Nền tảng",(document.querySelector('input[name="rOs"]:checked')||{}).value||"Cả hai",
     "","### Muốn tool làm gì",$("rWhat").value.trim()||"(chưa ghi)","","### Link",$("rLink").value.trim()||"(chưa có)",
     "","---","_Gửi từ Airdrop Tracker. Claude xử lý vào sáng thứ Hai và mở Pull Request._"
   ]:[
@@ -695,6 +687,7 @@ function updateReqLink(){
   $("rSend").style.opacity=ok?1:.5;
 }
 ["rName","rWhat","rLink"].forEach(id=>$(id).addEventListener("input",updateReqLink));
+document.querySelectorAll('input[name="rOs"]').forEach(r=>r.addEventListener("change",updateReqLink));
 $("rSend").addEventListener("click",e=>{if($("rSend").getAttribute("href")==="#"){e.preventDefault();return}
   if(reqItem)requests[reqItem.name.toLowerCase()]={type:reqType,url:"https://github.com/"+repoSlug+"/issues"};
   setTimeout(()=>{$("mReq").classList.remove("open");render();toast("Đã mở GitHub — bấm Submit để gửi")},300)});

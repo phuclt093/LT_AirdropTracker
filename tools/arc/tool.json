@@ -1,0 +1,8 @@
+{
+  "id": "arc",
+  "name": "Tool farm Arc Testnet",
+  "version": "1.0.0",
+  "keo": "arc-circle",
+  "platforms": ["linux", "windows"],
+  "notes": "Mỗi ngày tự làm 2–4 giao dịch nhỏ ngẫu nhiên trên Arc Testnet (gửi/chuyển USDC, EURC, approve, thỉnh thoảng deploy contract). Cần xin USDC testnet ở faucet.circle.com."
+}

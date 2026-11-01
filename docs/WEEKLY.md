@@ -6,13 +6,11 @@ Tài liệu này là "sổ tay" cho buổi cập nhật tự động mỗi sáng
 
 | Đường dẫn | Vai trò |
 |---|---|
-| `airdrops.json` | Danh sách kèo (web + bot Telegram đọc). `onchain: "<key>"` = kèo có tool farm trên máy nhà |
+| `airdrops.json` | Danh sách kèo (web + bot Telegram đọc). Field `tool` (do `tools/publish.sh` ghi) = kèo có app tool để tải |
 | `index.html` | Web tracker (GitHub Pages). Đọc `airdrops.json`, `data/*.json`, và issue đang mở qua GitHub API |
 | `data/weekly.json` | Khung **📅 Hướng dẫn tuần này** trên web |
-| `data/stats.json`, `data/runs.json` | Do worker máy nhà ghi, **không sửa tay** |
-| `worker/` | Chạy trên máy nhà (Ubuntu, systemd --user). Mỗi `farm-<key>.mjs` tự có lịch chạy riêng |
-| `worker/chains.mjs` | Thông số mạng: chainId, RPC, token |
-| `worker/update.sh` | Máy nhà tự `git pull` mỗi ngày ~4h sáng. Code chỉ chạy **sau khi chủ repo merge PR** |
+| `tools/` | Mã nguồn các **app tool** (đóng gói 1 file cho Linux/Windows, chạy trên máy người dùng). Phát hành lên **GitHub Releases**, không chạy gì trên GitHub |
+| `tools/chains.mjs` | Thông số mạng: chainId, RPC, token |
 
 ## Việc cần làm mỗi thứ Hai
 
@@ -47,7 +45,7 @@ Mỗi hướng dẫn phải đạt:
 - Task X (Twitter): dùng `xFollow: ["handle"]` (nút Follow 1 click) và `xTweet: "nội dung"` (mở trang đăng tweet điền sẵn) trong bước tương ứng. Handle phải lấy từ website/docs chính thức. Tweet mẫu viết tự nhiên, bằng tiếng Việt hoặc tiếng Anh, đúng yêu cầu của quest. **Không bao giờ** hướng dẫn tạo nhiều tài khoản X, mua follower hay dùng bot tự follow/like.
 - Mỗi bước có **1 link chính thức** nếu có, kèm tên miền hiển thị trong `lt` để người dùng nhận ra link giả.
 - Ghi rõ **mốc thời gian** (snapshot, season, hạn đăng ký) theo giờ Việt Nam nếu có.
-- Có bước nào worker tự động hoá được thì ghi ở bước cuối và gợi ý bấm "🤖 Nhờ viết tool".
+- Có bước nào tool tự động hoá được thì ghi ở bước cuối và gợi ý bấm "🤖 Nhờ viết tool".
 - Kèo **phải nạp tiền thật** thì không để ở trạng thái `farm`: chuyển sang `drop` (hoặc `wait`) và giải thích trong `guide`.
 - `daily` / `once` ngắn gọn, khớp với các bước trong `guide`.
 - Kiểm tra lại hướng dẫn của các kèo cũ mỗi tuần: link còn sống không, có thay đổi gì không. Sửa thì cập nhật `updated`.
@@ -64,25 +62,25 @@ Web tự đồng bộ `name/chain/status/prio/daily/once/note/web/x` từ `airdr
 
 ## Viết tool mới (`[Tool] ...`)
 
-1. Tìm thông số **từ docs chính thức**: chainId, RPC, explorer, faucet, địa chỉ token/contract cần dùng.
-2. Thêm mạng vào `worker/chains.mjs` (key ngắn, chữ thường). RPC đọc từ `process.env.<KEY>_RPC` trước, rồi mới tới RPC chính thức.
-3. Tạo `worker/farm-<key>.mjs` bằng cách **sao chép cấu trúc `farm-arc.mjs`**:
-   - `lockOrExit`, `SKIP_CHANCE`, kiểm tra chainId, kiểm tra số dư tối thiểu (báo đi xin faucet),
-   - 2–4 hành động ngẫu nhiên có nghỉ giữa chừng, mỗi giao dịch thử lại 1 lần,
-   - ghi `data/runs.json` qua `recordRun`, gọi `finish()` để cập nhật stats và push,
-   - biến tinh chỉnh dạng `<KEY>_MIN_ACTIONS`, `<KEY>_MIN_DELAY`… thêm vào `worker/.env.example`,
-   - đường dẫn state đọc `AIRDROP_STATE_DIR` (để test chạy được).
-   Chỉ dùng hành động on-chain an toàn: chuyển cho chính mình, approve, swap nhỏ trên DEX **chính thức**, mint NFT/faucet contract công khai, deploy contract nhỏ. Không gửi tiền tới địa chỉ lạ.
-4. Thêm script npm `farm:<key>` và `farm:<key>:dry` vào `worker/package.json`.
-5. Trong `airdrops.json`, gắn `"onchain": "<key>"` cho kèo đó (web sẽ hiện khung số liệu và nhãn **🤖 Có tool**).
-6. **Test bắt buộc trước khi mở PR:**
-   ```bash
-   cd worker && npm install && npm run test:farm -- <key>
-   ```
-   Phải đạt hết 7 tiêu chí. Nếu tool gọi contract đặc biệt (router DEX…), khai báo mock trong `chains.<key>.mocks` (`{ "<address>": "<solidity source của contract M>" }`) để test giả lập chạy được.
-7. Thêm vào `worker/README.md` một dòng mô tả tool và những gì người dùng phải chuẩn bị (faucet, token…).
+Tool là **app độc lập** chạy trên máy người dùng, không chạy trên GitHub và không ghi gì vào repo lúc chạy. Issue có mục **Nền tảng**: Linux / Windows / Cả hai.
 
-Khi chủ repo merge, máy nhà tự `git pull` lúc ~4h sáng hôm sau, thấy `farm-<key>.mjs` mới thì tự tạo lịch chạy. Ví farm dùng chung `PRIVATE_KEY` (cùng địa chỉ EVM trên mọi mạng).
+1. Tìm thông số **từ docs chính thức**: chainId, RPC, explorer, faucet, địa chỉ token/contract cần dùng.
+2. Thêm mạng vào `tools/chains.mjs` (key ngắn, chữ thường). RPC đọc từ `process.env.<KEY>_RPC` trước, rồi mới tới RPC chính thức.
+3. Tạo `tools/<id>/tool.json` theo mẫu `tools/arc/tool.json`:
+   - `id`, `name` (tiếng Việt), `version` (bắt đầu `1.0.0`, sửa tool thì tăng), `keo` (id kèo trong `airdrops.json`), `chain` (key mạng nếu khác `id`), `notes` (1–2 câu tool làm gì, cần chuẩn bị gì),
+   - `platforms`: `["linux"]`, `["windows"]` hoặc `["linux","windows"]` **đúng theo mục Nền tảng trong issue**.
+4. Tạo `tools/<id>/app.mjs` theo khuôn `tools/arc/app.mjs`: viết hàm `farm(ctx)` (và `status` nếu cần), rồi gọi `runApp(...)` từ `tools/common.mjs`. Khung đã lo sẵn menu tiếng Việt, cài ví, lịch chạy tự động (systemd / Task Scheduler), Telegram, khoá chống chạy trùng, nhật ký.
+   - Bên trong `farm`: kiểm tra chainId và số dư tối thiểu (báo đi xin faucet), làm 2–4 hành động ngẫu nhiên, có nghỉ giữa chừng (đọc `ctx.setting(...)`; `LTFARM_FAST` thì nghỉ 1–2s), mỗi giao dịch thử lại 1 lần, tôn trọng `ctx.dry`, trả về `{ ok, txCount, actions, error? }`.
+   - Chỉ dùng hành động on-chain an toàn: chuyển cho chính mình, approve, swap nhỏ trên DEX **chính thức**, mint/faucet contract công khai, deploy contract nhỏ. Không gửi tiền tới địa chỉ lạ.
+5. **Test bắt buộc trước khi phát hành:**
+   ```bash
+   cd tools && npm install
+   npm run test:tool -- <id>                          # mã nguồn, phải đạt 5/5
+   node build.mjs <id> && npm run test:tool -- <id> dist/<id>/ltfarm-<id>   # file Linux đã đóng gói, 5/5
+   ```
+   Tool gọi contract đặc biệt (router DEX…) thì khai báo mock trong `chains.<key>.mocks` (`{ "<address>": "<solidity source của contract M>" }`).
+6. **Phát hành:** `bash tools/publish.sh <id>`. Script đóng gói, tạo GitHub Release `tool-<id>-v<version>`, rồi ghi field `tool` (link tải) vào `airdrops.json`. Không có quyền tạo release thì vẫn commit mã nguồn trong PR, ghi rõ trong PR là chủ repo cần chạy `bash tools/publish.sh <id>` sau khi merge.
+7. Trong `guide` của kèo, thêm 1 bước "Tải tool": bấm ⬇️ → giải nén → mở app → 1 (dán key) → 2 (kiểm tra) → 6 (bật tự chạy). Nhắc cảnh báo SmartScreen trên Windows ("More info → Run anyway").
 
 ## Định dạng `data/weekly.json`
 
@@ -93,7 +91,7 @@ Khi chủ repo merge, máy nhà tự `git pull` lúc ~4h sáng hôm sau, thấy 
   "summary": "1–2 câu tóm tắt tình hình.",
   "steps": [
     { "keo": "Flop Labs", "text": "Testnet đã mở: kết nối ví và làm task đầu tiên", "link": "https://..." },
-    { "keo": "Arc", "text": "Xin faucet EURC để worker có thêm loại giao dịch" }
+    { "keo": "Arc", "text": "Xin faucet EURC để tool có thêm loại giao dịch" }
   ],
   "new": ["Tên kèo mới"],
   "tools": ["GIWA"],

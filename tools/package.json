@@ -1,0 +1,18 @@
+{
+  "name": "lt-airdrop-tools",
+  "private": true,
+  "type": "module",
+  "description": "Các tool farm (app chạy trên máy người dùng) — đóng gói và phát hành lên GitHub Releases",
+  "scripts": {
+    "build": "node build.mjs",
+    "test:tool": "node test/simulate.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": {
+    "bun": "^1.4.0",
+    "ganache": "^7.9.2",
+    "solc": "0.8.26"
+  }
+}

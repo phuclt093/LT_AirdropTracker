@@ -7,8 +7,8 @@ Bộ công cụ nhỏ để theo dõi các kèo farm airdrop, chạy **miễn ph
 | `index.html` | GitHub Pages | Web theo dõi kèo, tick việc hằng ngày, thống kê, chuỗi ngày farm, ví farm |
 | `airdrops.json` | Trong repo | Danh sách kèo dùng chung cho web và bot |
 | `scripts/remind.mjs` | GitHub Actions (cron) | Mỗi sáng 7:47 gửi danh sách việc cần làm về Telegram |
-| `worker/` | Máy nhà (systemd) | Tự farm testnet (hiện có Arc) + đẩy số liệu on-chain lên web, xem [worker/README.md](worker/README.md) |
-| `data/` | Worker tự cập nhật | `stats.json` (số liệu ví), `runs.json` (kết quả các lần farm), `weekly.json` (hướng dẫn tuần) |
+| `tools/` | Máy của bạn (app tải về) | Mỗi tool là 1 app (Linux/Windows) có menu tiếng Việt, tự farm hằng ngày. Tải ở nút ⬇️ trên tracker — xem [tools/README.md](tools/README.md) |
+| `data/weekly.json` | Claude, sáng thứ Hai | Hướng dẫn tuần hiện trên web |
 | `sync/` | Cloudflare Workers (miễn phí) | Đăng nhập bằng MetaMask, đồng bộ tiến độ giữa các máy — xem [sync/README.md](sync/README.md) |
 | `docs/WEEKLY.md` | Claude, sáng thứ Hai | Dò kèo mới, viết tool theo yêu cầu, cập nhật hướng dẫn tuần, gửi 1 Pull Request để bạn duyệt |
 
@@ -79,9 +79,9 @@ Từ đó trở đi, sáng nào bot cũng tự nhắn. Muốn đổi giờ thì 
 
 ## 5. Nhờ Claude viết tool / đề xuất kèo
 
-- Trên mỗi kèo đang farm có nút **🤖 Nhờ viết tool**, còn trên đầu trang có nút **💡 Đề xuất kèo**. Bấm vào, ghi bạn muốn gì, rồi bấm **Gửi yêu cầu**. GitHub sẽ mở sẵn một issue, bạn chỉ cần bấm **Submit**.
+- Trên mỗi kèo đang farm có nút **🤖 Nhờ viết tool** (chọn Linux / Windows / Cả hai), còn trên đầu trang có nút **💡 Đề xuất kèo**. Bấm vào, ghi bạn muốn gì, rồi bấm **Gửi yêu cầu**. GitHub sẽ mở sẵn một issue, bạn chỉ cần bấm **Submit**.
 - Sáng thứ Hai, Claude xử lý tất cả yêu cầu và gửi **1 Pull Request**. Bạn đọc qua rồi bấm **Merge**.
-- Khoảng 4h sáng hôm sau, máy nhà tự `git pull`, thấy tool mới thì tự tạo lịch chạy. Có Telegram thì bạn sẽ nhận được tin báo.
+- Tool được đóng gói thành app (Linux / Windows theo bạn chọn) và đưa lên **GitHub Releases**. Kèo đó trên tracker sẽ có nút **⬇️ Tải tool**: tải về, giải nén, mở lên dùng.
 
 ## 6. Chạy thử trên máy
 

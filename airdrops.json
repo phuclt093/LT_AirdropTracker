@@ -1,7 +1,7 @@
 {
-  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập. 'guide': {updated, warn, steps:[{t,d,link,lt}]} — hướng dẫn chi tiết từng bước, web hiện trong khung 📖. 'network': thông số EIP-3085 (chainId số, chainName, rpcUrls, nativeCurrency, blockExplorerUrls) — web hiện nút thêm mạng vào MetaMask 1 click. Chỉ điền từ docs chính thức. Trong mỗi bước của guide có thể thêm 'xFollow': [handle...] (nút Follow 1 click) và 'xTweet': 'nội dung tweet mẫu' (nút mở trang đăng tweet điền sẵn). Chỉ dùng handle đã xác minh. 'syncApi': URL Cloudflare Worker đồng bộ (sync/README.md); để trống = chỉ lưu trên trình duyệt.",
+  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'guide': {updated, warn, steps:[{t,d,link,lt}]} — hướng dẫn chi tiết từng bước, web hiện trong khung 📖. 'network': thông số EIP-3085 (chainId số, chainName, rpcUrls, nativeCurrency, blockExplorerUrls) — web hiện nút thêm mạng vào MetaMask 1 click. Chỉ điền từ docs chính thức. Trong mỗi bước của guide có thể thêm 'xFollow': [handle...] (nút Follow 1 click) và 'xTweet': 'nội dung tweet mẫu' (nút mở trang đăng tweet điền sẵn). Chỉ dùng handle đã xác minh. 'syncApi': URL Cloudflare Worker đồng bộ (sync/README.md); để trống = chỉ lưu trên trình duyệt. 'tool': do tools/publish.sh tự ghi (id, name, version, notes, downloads{linux,windows}, release).",
   "repo": "phuclt093/LT_AirdropTracker",
-  "syncApi": "https://airdrop-tracker-sync.phuclt093.workers.dev",
+  "syncApi": "",
   "airdrops": [
     {
       "id": "flop-labs",
@@ -68,26 +68,25 @@
       "status": "farm",
       "prio": "high",
       "daily": [
-        "(Tự động) Worker farm 2–4 giao dịch",
-        "Xin faucet USDC nếu web báo sắp hết"
+        "(Tự động) Tool Arc farm 2–4 giao dịch",
+        "Xin faucet USDC nếu tool báo sắp hết"
       ],
       "once": [
         "Tạo ví farm riêng",
         "Thêm mạng Arc Testnet vào MetaMask",
         "Xin USDC + EURC ở faucet",
-        "Cài worker trên máy nhà"
+        "Tải Tool Arc, cài ví, bật tự chạy"
       ],
       "web": "https://docs.arc.network/integrate/connect-to-arc",
       "x": "",
       "note": "L1 của Circle, gas trả bằng USDC. Chưa xác nhận airdrop hay points chính thức, đây là kèo cược sớm.",
-      "onchain": "arc",
       "guide": {
         "updated": "2026-11-01",
         "warn": "Chưa có chương trình points hay airdrop chính thức. Chỉ dùng ví farm riêng, không dùng ví chính.",
         "steps": [
           {
             "t": "Tạo ví farm riêng",
-            "d": "MetaMask → bấm tên tài khoản ở trên cùng → “Add account or hardware wallet” → “Add a new account” → đặt tên “Farm”. Dùng ví này cho mọi kèo, và cũng là ví worker máy nhà sẽ dùng."
+            "d": "MetaMask → bấm tên tài khoản ở trên cùng → “Add account or hardware wallet” → “Add a new account” → đặt tên “Farm”. Dùng ví này cho mọi kèo, và cũng là ví bạn dán vào Tool Arc."
           },
           {
             "t": "Thêm mạng Arc Testnet vào MetaMask",
@@ -103,7 +102,7 @@
           },
           {
             "t": "Xin thêm EURC",
-            "d": "Cũng ở trang faucet, đổi sang thẻ EURC rồi gửi về cùng địa chỉ. Có EURC thì worker làm thêm được loại giao dịch chuyển EURC.",
+            "d": "Cũng ở trang faucet, đổi sang thẻ EURC rồi gửi về cùng địa chỉ. Có EURC thì Tool Arc làm thêm được loại giao dịch chuyển EURC.",
             "link": "https://faucet.circle.com",
             "lt": "faucet.circle.com"
           },
@@ -114,8 +113,8 @@
             "lt": "testnet.arcscan.app"
           },
           {
-            "t": "Cài worker để tự farm mỗi ngày",
-            "d": "Trên máy nhà: cd ~/Projects/LT_AirdropTracker/worker → nano .env (dán PRIVATE_KEY của ví farm) → bash install.sh. Từ đó mỗi ngày máy tự làm 2–4 giao dịch vào giờ ngẫu nhiên, và web hiện số liệu trong khung ⛓ bên dưới."
+            "t": "Tải Tool Arc để tự farm mỗi ngày",
+            "d": "Bấm nút ⬇️ Tải tool (Linux hoặc Windows) trong khung 🤖 bên dưới → giải nén → mở app ltfarm-arc.\n• Chọn 1: dán private key của ví farm (chỉ lưu trên máy bạn).\n• Chọn 2: kiểm tra số dư.\n• Chọn 3: farm thử 1 lần.\n• Chọn 6: bật tự chạy mỗi ngày (giờ ngẫu nhiên 8h–20h, máy cần bật).\nWindows có thể cảnh báo “Windows protected your PC” vì app chưa ký: bấm More info → Run anyway."
           },
           {
             "t": "Mỗi tuần tự dùng 1 dApp thật",
@@ -194,7 +193,7 @@
           },
           {
             "t": "Tự động hoá",
-            "d": "Kèo này rất hợp để worker tự làm giao dịch mỗi ngày (giống Arc). Riêng phần xin faucet thì vẫn phải tự bấm. Bấm “🤖 Nhờ viết tool” để Claude làm vào thứ Hai."
+            "d": "Kèo này rất hợp để làm tool tự giao dịch mỗi ngày (giống Arc). Riêng phần xin faucet thì vẫn phải tự bấm. Bấm “🤖 Nhờ viết tool” để Claude làm vào thứ Hai."
           }
         ]
       },

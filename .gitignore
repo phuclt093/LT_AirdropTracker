@@ -12,3 +12,6 @@ worker/state/
 # Cloudflare worker (sync/)
 .dev.vars
 .wrangler/
+
+# tools build output
+tools/dist/
