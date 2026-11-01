@@ -142,14 +142,14 @@
       "tool": {
         "id": "arc",
         "name": "Tool farm Arc Testnet",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "mode": "gui",
         "notes": "Mỗi ngày tự làm 2–4 giao dịch nhỏ ngẫu nhiên trên Arc Testnet (gửi/chuyển USDC, EURC, approve, thỉnh thoảng deploy contract). Cần xin USDC testnet ở faucet.circle.com.",
         "downloads": {
-          "linux": "https://github.com/phuclt093/LT_AirdropTracker/releases/download/tool-arc-v1.1.0/ltfarm-arc-linux-x64.tar.gz",
-          "windows": "https://github.com/phuclt093/LT_AirdropTracker/releases/download/tool-arc-v1.1.0/ltfarm-arc-windows-x64.zip"
+          "linux": "https://github.com/phuclt093/LT_AirdropTracker/releases/download/tool-arc-v1.2.0/ltfarm-arc-linux-x64.tar.gz",
+          "windows": "https://github.com/phuclt093/LT_AirdropTracker/releases/download/tool-arc-v1.2.0/ltfarm-arc-windows-x64.zip"
         },
-        "release": "https://github.com/phuclt093/LT_AirdropTracker/releases/tag/tool-arc-v1.1.0"
+        "release": "https://github.com/phuclt093/LT_AirdropTracker/releases/tag/tool-arc-v1.2.0"
       }
     },
     {
