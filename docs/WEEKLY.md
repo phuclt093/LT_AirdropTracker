@@ -43,6 +43,8 @@ Người dùng **mới chơi airdrop**, nên viết hướng dẫn chung chung k
 
 Mỗi hướng dẫn phải đạt:
 - **4–8 bước theo đúng thứ tự làm**: tạo/chọn ví farm → thêm mạng (ghi đủ Network name, RPC, Chain ID, Symbol, Explorer) → faucet (lượng nhận, bao lâu xin lại, có captcha/đăng nhập không) → hành động cụ thể (bấm nút nào, gửi bao nhiêu) → cách kiểm tra đã xong (explorer/portal) → nhịp làm hằng ngày/tuần.
+- Kèo nào có mạng EVM thì **bắt buộc thêm field `network`** (chainId dạng số, chainName, rpcUrls, nativeCurrency {name,symbol,decimals}, blockExplorerUrls), lấy **từ docs chính thức**. Web sẽ hiện nút 🦊 "Thêm mạng vào MetaMask (1 click)" để người dùng không phải gõ tay. Bước "thêm mạng" trong `guide` thì hướng dẫn bấm nút đó trước, cách thêm tay để sau.
+- Task X (Twitter): dùng `xFollow: ["handle"]` (nút Follow 1 click) và `xTweet: "nội dung"` (mở trang đăng tweet điền sẵn) trong bước tương ứng. Handle phải lấy từ website/docs chính thức. Tweet mẫu viết tự nhiên, bằng tiếng Việt hoặc tiếng Anh, đúng yêu cầu của quest. **Không bao giờ** hướng dẫn tạo nhiều tài khoản X, mua follower hay dùng bot tự follow/like.
 - Mỗi bước có **1 link chính thức** nếu có, kèm tên miền hiển thị trong `lt` để người dùng nhận ra link giả.
 - Ghi rõ **mốc thời gian** (snapshot, season, hạn đăng ký) theo giờ Việt Nam nếu có.
 - Có bước nào worker tự động hoá được thì ghi ở bước cuối và gợi ý bấm "🤖 Nhờ viết tool".

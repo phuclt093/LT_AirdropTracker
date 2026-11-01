@@ -1,5 +1,5 @@
 {
-  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập. 'guide': {updated, warn, steps:[{t,d,link,lt}]} — hướng dẫn chi tiết từng bước, web hiện trong khung 📖. 'network': thông số EIP-3085 (chainId số, chainName, rpcUrls, nativeCurrency, blockExplorerUrls) — web hiện nút thêm mạng vào MetaMask 1 click. Chỉ điền từ docs chính thức.",
+  "_huong_dan": "Danh sách kèo dùng chung cho web và bot Telegram. Mỗi kèo cần 'id' riêng (chữ thường, không dấu). status: farm | wait | claim | sold | drop. prio: high | mid | low. Chỉ dán link lấy từ X chính thức của dự án. 'onchain': khoá mạng trong worker/chains.mjs (vd 'arc') để web hiện số liệu ví do worker thu thập. 'guide': {updated, warn, steps:[{t,d,link,lt}]} — hướng dẫn chi tiết từng bước, web hiện trong khung 📖. 'network': thông số EIP-3085 (chainId số, chainName, rpcUrls, nativeCurrency, blockExplorerUrls) — web hiện nút thêm mạng vào MetaMask 1 click. Chỉ điền từ docs chính thức. Trong mỗi bước của guide có thể thêm 'xFollow': [handle...] (nút Follow 1 click) và 'xTweet': 'nội dung tweet mẫu' (nút mở trang đăng tweet điền sẵn). Chỉ dùng handle đã xác minh.",
   "repo": "phuclt093/LT_AirdropTracker",
   "airdrops": [
     {
@@ -26,9 +26,13 @@
         "steps": [
           {
             "t": "Follow X chính thức và bật thông báo",
-            "d": "Mở link, bấm Follow, rồi bấm biểu tượng chuông 🔔 chọn “Tất cả bài đăng”. Đây là điều kiện duy nhất dự án đã công bố, và ngày mở testnet sẽ được đăng ở đây trước tiên. Follow thêm Arthur Hayes (@CryptoHayes).",
+            "d": "Bấm 2 nút Follow bên dưới → X mở sẵn trang → bấm Follow. Sau đó vào trang @flop_labs, bấm biểu tượng chuông 🔔 → “Tất cả bài đăng”. Theo các bài tổng hợp, follow X chính thức là điều kiện duy nhất dự án công bố đến giờ, và ngày mở testnet sẽ được đăng ở đây trước tiên.",
             "link": "https://x.com/flop_labs",
-            "lt": "x.com/flop_labs"
+            "lt": "x.com/flop_labs",
+            "xFollow": [
+              "flop_labs",
+              "CryptoHayes"
+            ]
           },
           {
             "t": "Điền form vai trò trên website",
@@ -86,7 +90,7 @@
           },
           {
             "t": "Thêm mạng Arc Testnet vào MetaMask",
-            "d": "Cách dễ nhất: bấm nút 🦊 “Thêm mạng vào MetaMask” ở đầu khung hướng dẫn này, rồi bấm Approve → Switch network trong MetaMask. Không phải gõ gì.\nNếu muốn thêm tay: bấm ⋮ trong MetaMask → “Expand view” để mở MetaMask dạng toàn trang (sẽ không bị tắt khi bạn chuyển cửa sổ đi copy), rồi Settings → Networks → Add a network manually.\nMetaMask → Settings → Networks → Add a network manually, điền:\n• Network name: Arc Testnet\n• RPC URL: https://rpc.testnet.arc.network\n• Chain ID: 5042002\n• Currency symbol: USDC\n• Block explorer: https://testnet.arcscan.app",
+            "d": "Cách dễ nhất: bấm nút 🦊 “Thêm mạng vào MetaMask” ở đầu khung hướng dẫn này, rồi bấm Approve → Switch network trong MetaMask. Không phải gõ gì.\nNếu muốn thêm tay: bấm ⋮ trong MetaMask → “Expand view” để mở MetaMask dạng toàn trang (sẽ không bị tắt khi bạn chuyển cửa sổ đi copy), rồi Settings → Networks → Add a network manually, điền:\n• Network name: Arc Testnet\n• RPC URL: https://rpc.testnet.arc.network\n• Chain ID: 5042002\n• Currency symbol: USDC\n• Block explorer: https://testnet.arcscan.app",
             "link": "https://docs.arc.network/integrate/connect-to-arc",
             "lt": "docs.arc.network"
           },
@@ -161,7 +165,7 @@
         "steps": [
           {
             "t": "Thêm mạng GIWA Sepolia (1 click)",
-            "d": "Cách dễ nhất: bấm nút 🦊 “Thêm mạng vào MetaMask” ở đầu khung hướng dẫn này, rồi bấm Approve → Switch network trong MetaMask. Không phải gõ gì.\nNếu muốn thêm tay: bấm ⋮ trong MetaMask → “Expand view” để mở MetaMask dạng toàn trang (sẽ không bị tắt khi bạn chuyển cửa sổ đi copy), rồi Settings → Networks → Add a network manually.\n• Network name: GIWA Sepolia\n• RPC URL: https://sepolia-rpc.giwa.io\n• Chain ID: 91342\n• Currency symbol: ETH\n• Block explorer: https://sepolia-explorer.giwa.io",
+            "d": "Cách dễ nhất: bấm nút 🦊 “Thêm mạng vào MetaMask” ở đầu khung hướng dẫn này, rồi bấm Approve → Switch network trong MetaMask. Không phải gõ gì.\nNếu muốn thêm tay: bấm ⋮ trong MetaMask → “Expand view” để mở MetaMask dạng toàn trang (sẽ không bị tắt khi bạn chuyển cửa sổ đi copy), rồi Settings → Networks → Add a network manually, điền:\n• Network name: GIWA Sepolia\n• RPC URL: https://sepolia-rpc.giwa.io\n• Chain ID: 91342\n• Currency symbol: ETH\n• Block explorer: https://sepolia-explorer.giwa.io",
             "link": "https://sepolia-explorer.giwa.io",
             "lt": "sepolia-explorer.giwa.io"
           },

@@ -126,6 +126,9 @@ ol.gsteps .gdone input{width:16px;height:16px;accent-color:var(--acc);padding:0;
 .netbtn{display:flex;align-items:center;gap:8px;margin:0 12px 10px;padding:9px 12px;border-radius:9px;border:1px solid #6a4a1f;background:#21170c;color:#ffb35a;font-weight:600;font-size:13px;width:calc(100% - 24px);justify-content:center}
 .netbtn:hover{border-color:#ffb35a}
 .netbtn.on{border-color:#2f5a44;background:#0f2219;color:var(--acc)}
+.xbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.xb{font-size:12px;padding:3px 10px;border-radius:6px;background:#000;color:#fff;border:1px solid #444;text-decoration:none;font-weight:600}
+.xb:hover{border-color:#fff}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#06240f;padding:8px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
 </style>
 </head>
@@ -449,6 +452,13 @@ async function initMM(){
   render();
 }
 
+/* Nút X chính thức (Web Intents): chỉ mở trang X đã điền sẵn, bạn tự bấm xác nhận. Web không cần quyền gì với tài khoản X. */
+function xButtons(st){
+  const f=(st.xFollow||[]).filter(h=>/^[A-Za-z0-9_]{1,15}$/.test(h));
+  const parts=f.map(h=>`<a class="xb" href="https://x.com/intent/follow?screen_name=${encodeURIComponent(h)}" target="_blank" rel="noopener">𝕏 Follow @${esc(h)}</a>`);
+  if(st.xTweet)parts.push(`<a class="xb" href="https://x.com/intent/tweet?text=${encodeURIComponent(st.xTweet)}" target="_blank" rel="noopener">𝕏 Đăng tweet mẫu</a>`);
+  return parts.length?`<div class="xbtns">${parts.join("")}</div>`:"";
+}
 function guidePanel(i){
   const r=repoById[i.id];const g=r&&r.guide;if(!g||!(g.steps||[]).length)return "";
   const done=(state.guideDone&&state.guideDone[i.id])||[];
@@ -458,7 +468,7 @@ function guidePanel(i){
     ${g.warn?`<div class="gwarn">⚠️ ${esc(g.warn)}</div>`:""}
     ${netButton(i)}
     <ol class="gsteps">${g.steps.map((st,k)=>{const ok=done.includes(k);const L=safeUrl(st.link);
-      return `<li class="${ok?"ok":""}"><div class="num">${ok?"✓":k+1}</div><div style="flex:1;min-width:0"><div class="gt">${esc(st.t)}</div>${st.d?`<div class="gd">${esc(st.d)}</div>`:""}${L?`<a class="gl" href="${esc(L)}" target="_blank" rel="noopener">Mở ${esc(st.lt||"link")} ↗</a>`:""}</div><label class="gdone"><input type="checkbox" data-gstep="${i.id}|${k}" ${ok?"checked":""}>xong</label></li>`}).join("")}</ol></details>`;
+      return `<li class="${ok?"ok":""}"><div class="num">${ok?"✓":k+1}</div><div style="flex:1;min-width:0"><div class="gt">${esc(st.t)}</div>${st.d?`<div class="gd">${esc(st.d)}</div>`:""}${xButtons(st)}${L?`<a class="gl" href="${esc(L)}" target="_blank" rel="noopener">Mở ${esc(st.lt||"link")} ↗</a>`:""}</div><label class="gdone"><input type="checkbox" data-gstep="${i.id}|${k}" ${ok?"checked":""}>xong</label></li>`}).join("")}</ol></details>`;
 }
 function toolBadge(i){
   if(chainKeyOf(i))return `<span class="req ok" title="Worker máy nhà đang farm kèo này">🤖 Có tool</span>`;
