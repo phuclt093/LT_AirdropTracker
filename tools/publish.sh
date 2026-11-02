@@ -47,5 +47,24 @@ print("downloads:",dl)
 PY
 
 cd "$REPO_DIR"
-git add airdrops.json && git commit -m "Phát hành $NAME v$VER" && git push
-echo "✅ Xong! Trên tracker, kèo $KEO sẽ có nút ⬇️ Tải tool sau ~1 phút."
+git add airdrops.json
+git commit -q -m "Phát hành $NAME v$VER" || { echo "airdrops.json không đổi — bỏ qua commit"; exit 0; }
+
+# main có thể được bảo vệ (bắt buộc qua Pull Request) → thử push thẳng, không được thì tự mở PR rồi merge
+if git push -q 2>/dev/null; then
+  echo "✅ Xong! Trên tracker, kèo $KEO sẽ có nút ⬇️ Tải tool sau ~1 phút."
+  exit 0
+fi
+echo "▶ main được bảo vệ — tạo Pull Request để gắn link tải"
+BR="publish/$ID-v$VER"
+git branch -f "$BR" HEAD
+git push -q -f -u origin "$BR"
+git reset -q --hard "origin/main"   # main trên máy trở lại giống GitHub; commit nằm ở nhánh $BR
+PR_URL="$(gh pr create -R "$REPO" --base main --head "$BR" --title "Phát hành $NAME v$VER" --body "Gắn link tải $NAME v$VER vào airdrops.json (tạo tự động bởi tools/publish.sh)." 2>/dev/null || gh pr view "$BR" -R "$REPO" --json url -q .url)"
+echo "PR: $PR_URL"
+if gh pr merge "$BR" -R "$REPO" --merge --delete-branch 2>/dev/null; then
+  git pull -q --ff-only || true
+  echo "✅ Đã merge. Trên tracker, kèo $KEO sẽ có nút ⬇️ Tải tool sau ~1 phút."
+else
+  echo "⚠️  Chưa tự merge được (có thể cần review/kiểm tra). Mở link PR ở trên, bấm Merge là xong."
+fi
