@@ -160,19 +160,20 @@
       "status": "farm",
       "prio": "mid",
       "daily": [
-        "Xin ETH ở GIWA Faucet",
-        "Xin ETH ở Nodit Faucet",
-        "1–2 giao dịch trên GIWA Sepolia"
+        "(Tự động) Tool GIWA farm 2–4 giao dịch",
+        "Xin ETH ở GIWA Faucet (24h/lần)",
+        "Xin ETH ở Nodit Faucet (24h/lần)"
       ],
       "once": [
         "Thêm mạng GIWA Sepolia vào MetaMask",
-        "Thử bridge Sepolia → GIWA"
+        "Thử bridge Sepolia → GIWA",
+        "Tải Tool GIWA (Linux), cài ví, bật tự chạy"
       ],
       "web": "https://docs.giwa.io",
       "x": "",
       "note": "L2 của Upbit (Dunamu) trên OP Stack, block 1 giây. Chưa công bố token hay points.",
       "guide": {
-        "updated": "2026-11-01",
+        "updated": "2026-11-02",
         "warn": "Chưa công bố token hay points, đây là kèo cược vào Upbit. Faucet mỗi ngày chỉ cho ít ETH, nên cứ xin đều đặn.",
         "steps": [
           {
@@ -204,8 +205,8 @@
             "lt": "sepolia-bridge.giwa.io"
           },
           {
-            "t": "Tự động hoá",
-            "d": "Kèo này rất hợp để làm tool tự giao dịch mỗi ngày (giống Arc). Riêng phần xin faucet thì vẫn phải tự bấm. Bấm “🤖 Nhờ viết tool” để Claude làm vào thứ Hai."
+            "t": "Tải Tool GIWA để tự giao dịch mỗi ngày (Linux)",
+            "d": "Tool chỉ tự làm phần giao dịch; faucet vẫn phải tự bấm mỗi ngày ở 2 bước trên (tool không vượt captcha/chống bot của faucet). Khi tool đã phát hành, bấm nút ⬇️ Tải tool (Linux) trong khung 🤖 bên dưới → giải nén → nháy đúp file ltfarm-giwa. Giao diện tự mở trên trình duyệt, làm lần lượt 4 bước bấm nút:\n① Dán private key ví farm (chỉ lưu trên máy bạn)\n② Mở faucet xin ETH → bấm Làm mới\n③ Farm ngay (xem từng giao dịch: gửi ETH cho chính mình, wrap/unwrap WETH, thỉnh thoảng deploy contract)\n④ Bật tự chạy mỗi ngày\n• Mỗi giao dịch chỉ dùng rất ít ETH (tối đa ~0.0002), nên 0.005 ETH faucet đủ dùng nhiều ngày. Khi còn dưới 0.0005 ETH, tool dừng và nhắc bạn xin faucet.\n• Nếu nháy đúp không có gì xảy ra → chuột phải file → Properties → bật “Executable as Program”."
           }
         ]
       },
