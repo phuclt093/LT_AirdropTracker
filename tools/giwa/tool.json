@@ -1,0 +1,12 @@
+{
+  "id": "giwa",
+  "name": "Tool farm GIWA Sepolia",
+  "version": "1.0.0",
+  "mode": "gui",
+  "keo": "giwa",
+  "platforms": [
+    "linux"
+  ],
+  "notes": "Mỗi ngày tự làm 2–4 giao dịch nhỏ ngẫu nhiên trên GIWA Sepolia (gửi ETH cho chính mình, wrap/unwrap WETH, thỉnh thoảng deploy contract). Faucet vẫn phải tự xin ở faucet.giwa.io — tool báo khi sắp hết gas.",
+  "repo": "phuclt093/LT_AirdropTracker"
+}

@@ -1,8 +1,36 @@
 {
-  "week": null,
-  "title": "Chưa có hướng dẫn tuần này",
-  "summary": "Sáng thứ Hai hằng tuần Claude sẽ dò kèo mới, viết tool theo yêu cầu và cập nhật hướng dẫn ở đây.",
-  "steps": [],
+  "week": "2026-11-02",
+  "title": "Tuần này: có Tool GIWA (Linux), chưa thêm kèo mới",
+  "summary": "Đã viết xong tool tự giao dịch cho GIWA theo yêu cầu (#1), test 5/5; cần chạy lệnh phát hành sau khi merge. Flop Labs vẫn chưa mở testnet, GenLayer đang ở Season 2.",
+  "steps": [
+    {
+      "keo": "GIWA (Upbit)",
+      "text": "Merge PR, chạy `bash tools/publish.sh giwa` rồi tải Tool GIWA (Linux), làm 4 bước trên giao diện"
+    },
+    {
+      "keo": "GIWA (Upbit)",
+      "text": "Mỗi ngày xin ETH ở GIWA Faucet (0.005 ETH / 24h) — tool không tự xin faucet được",
+      "link": "https://faucet.giwa.io"
+    },
+    {
+      "keo": "Arc (Circle)",
+      "text": "Xin thêm USDC + EURC ở faucet nếu Tool Arc báo sắp hết gas",
+      "link": "https://faucet.circle.com"
+    },
+    {
+      "keo": "GenLayer",
+      "text": "Season 2: nộp 1 đóng góp thật trên Portal (contract có chức năng hoặc bài viết)",
+      "link": "https://portal.genlayer.foundation"
+    },
+    {
+      "keo": "Flop Labs",
+      "text": "Testnet chưa mở — chỉ cần bật chuông X @flop_labs, cảnh giác token FLOP giả",
+      "link": "https://x.com/flop_labs"
+    }
+  ],
   "new": [],
-  "tools": []
+  "tools": [
+    "GIWA"
+  ],
+  "pr": "https://github.com/phuclt093/LT_AirdropTracker/pull/2"
 }

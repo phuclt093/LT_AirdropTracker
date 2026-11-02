@@ -190,7 +190,7 @@ export async function runApp(tool) {
       const [bal, nonce] = await Promise.all([p.getBalance(w.address), p.getTransactionCount(w.address)]);
       const b = Number(ethers.formatUnits(bal, tool.chain.nativeDecimals));
       console.log(`Số dư: ${b} ${tool.chain.nativeSymbol}   ·   Đã gửi: ${nonce} giao dịch`);
-      if (b < Number(ctx.setting("minBalance", 1))) console.log(C.y(`⚠️  Sắp hết gas — xin thêm tại ${tool.chain.faucet}`));
+      if (b < Number(ctx.setting("minBalance", tool.chain.minBalance ?? 1))) console.log(C.y(`⚠️  Sắp hết gas — xin thêm tại ${tool.chain.faucet}`));
       if (tool.extra) for (const x of await tool.extra(ctx, w.address)) console.log(`${x.label}: ${x.value}`);
     } catch (e) { console.log(C.r("Không đọc được số liệu từ mạng: " + (e.shortMessage || e.message))); }
     const days = (s.history || []).filter((h) => h.ok && h.tx > 0).map((h) => h.date);
@@ -220,7 +220,7 @@ export async function runApp(tool) {
     const balance = Number(Number(ethers.formatUnits(bal, tool.chain.nativeDecimals)).toFixed(4));
     let extra = []; try { extra = tool.extra ? await tool.extra(ctx, address) : []; } catch {}
     const days = new Set((s.history || []).filter((h) => h.ok && h.tx > 0).map((h) => h.date)).size;
-    return { address, balance, symbol: tool.chain.nativeSymbol, nonce, days, extra, last: s.last || null, low: balance < Number(ctx.setting("minBalance", 1)) };
+    return { address, balance, symbol: tool.chain.nativeSymbol, nonce, days, extra, last: s.last || null, low: balance < Number(ctx.setting("minBalance", tool.chain.minBalance ?? 1)) };
   }
 
   // ---------- Linux: biểu tượng trong danh sách ứng dụng (nháy là mở giao diện) ----------
