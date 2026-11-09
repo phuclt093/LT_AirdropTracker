@@ -1,8 +1,29 @@
 {
-  "week": null,
-  "title": "Chưa có hướng dẫn tuần này",
-  "summary": "Sáng thứ Hai hằng tuần Claude sẽ dò kèo mới, viết tool theo yêu cầu và cập nhật hướng dẫn ở đây.",
-  "steps": [],
+  "week": "2026-11-09",
+  "title": "Tuần này: Flop Labs sắp chốt ngày testnet, Arc hạ ưu tiên",
+  "summary": "Không có kèo mới đủ tin cậy và không có issue nào cần xử lý. Flop Labs mới mở devnet cho dev (không tính điểm), ngày mở testnet công khai dự kiến công bố trong tuần. Arc đã lên mainnet từ 16/9 nhưng chưa có airdrop cho testnet nên hạ xuống ưu tiên trung bình.",
+  "steps": [
+    {
+      "keo": "Flop Labs",
+      "text": "Bật chuông X @flop_labs — ngày mở testnet công khai sẽ đăng trong tuần. KHÔNG farm devnet (không tính điểm)",
+      "link": "https://x.com/flop_labs"
+    },
+    {
+      "keo": "GIWA (Upbit)",
+      "text": "Mỗi ngày xin ETH ở GIWA Faucet (0.005 ETH / 24h) để Tool GIWA có gas",
+      "link": "https://faucet.giwa.io"
+    },
+    {
+      "keo": "GenLayer",
+      "text": "Season 2: nộp 1 đóng góp thật trên Portal (contract có chức năng hoặc bài viết)",
+      "link": "https://portal.genlayer.foundation"
+    },
+    {
+      "keo": "Arc (Circle)",
+      "text": "Cứ để Tool Arc chạy (miễn phí), nhưng đừng kết nối ví vào trang “check/claim ARC” nào — chưa có airdrop"
+    }
+  ],
   "new": [],
-  "tools": []
+  "tools": [],
+  "pr": ""
 }

@@ -6,12 +6,12 @@
     {
       "id": "flop-labs",
       "name": "Flop Labs",
-      "chain": "Chưa công bố (testnet sắp mở)",
+      "chain": "Devnet cho dev (chưa tính điểm) — testnet công khai chưa mở",
       "type": "Testnet",
       "status": "farm",
       "prio": "high",
       "daily": [
-        "Mở X @flop_labs xem testnet mở chưa"
+        "Mở X @flop_labs xem đã công bố ngày mở testnet công khai chưa"
       ],
       "once": [
         "Follow @flop_labs + bật chuông",
@@ -20,10 +20,10 @@
       ],
       "web": "https://flop.finance",
       "x": "https://x.com/flop_labs",
-      "note": "Testnet dự kiến chạy ~90 ngày; khoảng 20% tổng cung dành cho người tham gia testnet. CHƯA có token FLOP — ai bán/“claim” là lừa đảo.",
+      "note": "Ngày 3/11/2026 mới mở developer testnet (devnet) cho lập trình viên: token devnet KHÔNG có giá trị, KHÔNG tính vào airdrop, có thể bị reset. Ngày mở testnet công khai dự kiến công bố trong tuần 9–15/11. Testnet công khai dự kiến chạy ~90 ngày. CHƯA có token FLOP — ai bán/“claim” là lừa đảo.",
       "guide": {
-        "updated": "2026-11-01",
-        "warn": "Chưa có token FLOP. Mọi trang “claim FLOP”, “presale FLOP” đều là lừa đảo. Flop Labs chưa công bố chạy trên chain nào, nên chưa cần thêm mạng vào ví.",
+        "updated": "2026-11-09",
+        "warn": "Devnet mở 3/11 chỉ dành cho lập trình viên thử nghiệm: Arthur Hayes nói rõ token devnet không có giá trị, không tính điểm airdrop và có thể bị xoá. Đừng tốn công farm devnet, và đừng tin trang nào bảo “đổi token devnet lấy FLOP”. Chưa có token FLOP; mọi trang “claim FLOP”, “presale FLOP” đều là lừa đảo.",
         "steps": [
           {
             "t": "Follow X chính thức và bật thông báo",
@@ -54,8 +54,8 @@
             "lt": "technocore.chat"
           },
           {
-            "t": "Khi testnet mở",
-            "d": "Claude sẽ cập nhật hướng dẫn cụ thể vào sáng thứ Hai ngay sau đó: thêm mạng, faucet, task cần làm. Nếu làm được thì viết luôn tool tự động."
+            "t": "Khi testnet công khai mở (dự kiến công bố tuần này)",
+            "d": "Theo tin tức ngày 5/11, Arthur Hayes cho biết devnet chạy ổn và ngày mở testnet công khai sẽ được chốt đầu tuần 9–15/11. Chỉ tin thông báo trên X @flop_labs / @CryptoHayes. Khi có ngày chính thức, Claude sẽ cập nhật hướng dẫn cụ thể (thêm mạng, faucet, task) vào sáng thứ Hai kế tiếp, và viết tool nếu làm được."
           }
         ]
       }
@@ -66,7 +66,7 @@
       "chain": "Arc testnet",
       "type": "Testnet",
       "status": "farm",
-      "prio": "high",
+      "prio": "mid",
       "daily": [
         "(Tự động) Tool Arc farm 2–4 giao dịch",
         "Xin faucet USDC nếu tool báo sắp hết"
@@ -79,10 +79,10 @@
       ],
       "web": "https://docs.arc.network/integrate/connect-to-arc",
       "x": "",
-      "note": "L1 của Circle, gas trả bằng USDC. Chưa xác nhận airdrop hay points chính thức, đây là kèo cược sớm.",
+      "note": "L1 của Circle, gas trả bằng USDC. Theo tin tức (The Block, Cointelegraph), Arc mainnet đã chạy từ 16/09/2026 và Circle đã mint 10 tỷ ARC, đã bán presale cho quỹ, nhưng CHƯA công bố airdrop hay tiêu chí nào cho người dùng testnet. Cơ hội thưởng cho testnet thấp hơn trước → hạ ưu tiên xuống mid.",
       "guide": {
-        "updated": "2026-11-01",
-        "warn": "Chưa có chương trình points hay airdrop chính thức. Chỉ dùng ví farm riêng, không dùng ví chính.",
+        "updated": "2026-11-09",
+        "warn": "Arc mainnet đã chạy từ 16/09/2026 (theo tin tức). Circle đã mint token ARC và bán presale cho quỹ, nhưng CHƯA công bố airdrop hay tiêu chí cho người dùng testnet — có nguồn còn nói sẽ không thưởng hồi tố cho testnet. Các trang “check eligibility ARC”, “claim ARC” đều là lừa đảo: không kết nối ví vào đó. Testnet vẫn miễn phí nên cứ để tool chạy, nhưng đừng đặt kỳ vọng lớn. Chỉ dùng ví farm riêng.",
         "steps": [
           {
             "t": "Tạo ví farm riêng",
