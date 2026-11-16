@@ -1,36 +1,35 @@
 {
-  "week": "2026-11-02",
-  "title": "Tuần này: có Tool GIWA (Linux), chưa thêm kèo mới",
-  "summary": "Đã viết xong tool tự giao dịch cho GIWA theo yêu cầu (#1), test 5/5; cần chạy lệnh phát hành sau khi merge. Flop Labs vẫn chưa mở testnet, GenLayer đang ở Season 2.",
+  "week": "2026-11-16",
+  "title": "Tuần này: Flop Labs chốt mở testnet 24/11 — chuẩn bị ví Polkadot",
+  "summary": "Arthur Hayes thông báo testnet + airdrop Flop Labs mở ngày 24/11/2026 (thứ Ba tuần sau). FLOP dùng ví kiểu Polkadot (Talisman/SubWallet), không phải MetaMask — nên chuẩn bị ví ngay tuần này. Không có kèo mới đủ tin cậy, không có issue nào cần xử lý.",
   "steps": [
     {
-      "keo": "GIWA (Upbit)",
-      "text": "Merge PR, chạy `bash tools/publish.sh giwa` rồi tải Tool GIWA (Linux), làm 4 bước trên giao diện"
+      "keo": "Flop Labs",
+      "text": "Cài ví Talisman (hoặc SubWallet), tạo 1 tài khoản “FLOP farm”, chép 12 từ khôi phục ra giấy",
+      "link": "https://talisman.xyz"
+    },
+    {
+      "keo": "Flop Labs",
+      "text": "Bật chuông X @flop_labs và kiểm tra form vai trò trên flop.finance đã điền chưa — testnet mở 24/11, có thể đổi lịch",
+      "link": "https://x.com/flop_labs"
+    },
+    {
+      "keo": "Flop Labs",
+      "text": "(Không bắt buộc) Xin token devnet để tập dùng ví — devnet KHÔNG tính điểm",
+      "link": "https://faucet.flop.network"
     },
     {
       "keo": "GIWA (Upbit)",
-      "text": "Mỗi ngày xin ETH ở GIWA Faucet (0.005 ETH / 24h) — tool không tự xin faucet được",
+      "text": "Mỗi ngày xin ETH ở GIWA Faucet (0.005 ETH / 24h) để Tool GIWA có gas",
       "link": "https://faucet.giwa.io"
-    },
-    {
-      "keo": "Arc (Circle)",
-      "text": "Xin thêm USDC + EURC ở faucet nếu Tool Arc báo sắp hết gas",
-      "link": "https://faucet.circle.com"
     },
     {
       "keo": "GenLayer",
       "text": "Season 2: nộp 1 đóng góp thật trên Portal (contract có chức năng hoặc bài viết)",
       "link": "https://portal.genlayer.foundation"
-    },
-    {
-      "keo": "Flop Labs",
-      "text": "Testnet chưa mở — chỉ cần bật chuông X @flop_labs, cảnh giác token FLOP giả",
-      "link": "https://x.com/flop_labs"
     }
   ],
   "new": [],
-  "tools": [
-    "GIWA"
-  ],
-  "pr": "https://github.com/phuclt093/LT_AirdropTracker/pull/2"
+  "tools": [],
+  "pr": ""
 }
