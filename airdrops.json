@@ -6,25 +6,33 @@
     {
       "id": "flop-labs",
       "name": "Flop Labs",
-      "chain": "Chưa công bố (testnet sắp mở)",
+      "chain": "FLOP Network (kiểu Polkadot/Substrate) — testnet công khai dự kiến mở 24/11/2026 (ngày mai)",
       "type": "Testnet",
       "status": "farm",
       "prio": "high",
       "daily": [
-        "Mở X @flop_labs xem testnet mở chưa"
+        "Ngày 24/11 trở đi: mở X @flop_labs xem testnet mở chưa và có task gì",
+        "Khi testnet mở: dùng AI compute thật trên testnet theo hướng dẫn chính thức"
       ],
       "once": [
         "Follow @flop_labs + bật chuông",
         "Điền form vai trò trên flop.finance",
+        "Cài ví Talisman hoặc SubWallet, tạo 1 tài khoản farm",
         "Tạo DID trên Technocore.chat"
       ],
       "web": "https://flop.finance",
       "x": "https://x.com/flop_labs",
-      "note": "Testnet dự kiến chạy ~90 ngày; khoảng 20% tổng cung dành cho người tham gia testnet. CHƯA có token FLOP — ai bán/“claim” là lừa đảo.",
+      "note": "Arthur Hayes thông báo trên X ngày 13/11/2026: testnet công khai + airdrop mở ngày 24/11/2026; ngày 20/11 ông nhắc lại “còn 4 ngày”. Trang xác minh link chính thức flop.finance/official ghi đây là ngày MỤC TIÊU, tuỳ mức sẵn sàng, testnet chạy tới ~90 ngày; mainnet/TGE chưa có ngày. Theo tin tức, airdrop tính theo lượng dùng AI compute thật trên testnet (và có thể thưởng FLOP cho góp ý giá trị); tiêu chí chính thức chưa công bố. Devnet (faucet.flop.network) KHÔNG tính điểm. Ví dùng loại Polkadot (Talisman/SubWallet/Polkadot.js), không phải MetaMask. CHƯA có token FLOP — ai bán/“mint”/“claim” là lừa đảo.",
       "guide": {
-        "updated": "2026-11-01",
-        "warn": "Chưa có token FLOP. Mọi trang “claim FLOP”, “presale FLOP” đều là lừa đảo. Flop Labs chưa công bố chạy trên chain nào, nên chưa cần thêm mạng vào ví.",
+        "updated": "2026-11-23",
+        "warn": "Testnet dự kiến mở NGÀY MAI 24/11/2026 (thứ Ba) nhưng Flop Labs gọi đây là ngày mục tiêu, có thể lùi — lịch đã lùi 2 lần. Ngày mở testnet là lúc kẻ lừa đảo hoạt động mạnh nhất: chỉ bấm link do X @flop_labs đăng hoặc có trong trang flop.finance/official, KHÔNG bấm link trong phần bình luận/tin nhắn. FLOP dùng ví kiểu Polkadot, không dùng MetaMask; chưa có token FLOP nên trang nào bắt “claim/mint FLOP” là lừa đảo. Devnet bây giờ KHÔNG tính điểm.",
         "steps": [
+          {
+            "t": "Lưu trang xác minh link chính thức",
+            "d": "Flop Labs có trang riêng liệt kê mọi link thật (X, GitHub, faucet, testnet). Bấm link bên dưới → bấm ⭐ (Ctrl+D) để lưu dấu trang. Mỗi khi thấy link lạ về FLOP, mở trang này so tên miền trước khi kết nối ví.",
+            "link": "https://flop.finance/official/",
+            "lt": "flop.finance/official"
+          },
           {
             "t": "Follow X chính thức và bật thông báo",
             "d": "Bấm 2 nút Follow bên dưới → X mở sẵn trang → bấm Follow. Sau đó vào trang @flop_labs, bấm biểu tượng chuông 🔔 → “Tất cả bài đăng”. Theo các bài tổng hợp, follow X chính thức là điều kiện duy nhất dự án công bố đến giờ, và ngày mở testnet sẽ được đăng ở đây trước tiên.",
@@ -42,6 +50,12 @@
             "lt": "flop.finance"
           },
           {
+            "t": "Cài ví Polkadot (Talisman hoặc SubWallet)",
+            "d": "Theo trang faucet chính thức, FLOP Network dùng ví kiểu Polkadot (địa chỉ SS58, prefix 42), không phải MetaMask.\n• Cài tiện ích Talisman (talisman.xyz) hoặc SubWallet (subwallet.app) trên Chrome — chỉ tải từ trang chủ hoặc Chrome Web Store có đúng tên nhà phát triển.\n• Bấm “Create new wallet” → chép 12 từ khôi phục ra GIẤY, không chụp màn hình, không gửi cho ai (kể cả Claude).\n• Tạo 1 tài khoản loại Polkadot/Substrate → đặt tên “FLOP farm”. Chỉ dùng 1 tài khoản này.",
+            "link": "https://talisman.xyz",
+            "lt": "talisman.xyz"
+          },
+          {
             "t": "Tạo danh tính DID cho AI agent trên Technocore",
             "d": "Technocore.chat là mạng chat dành cho AI agent do Flop Labs vận hành. Faucet testnet sẽ phát token ở đây, nhưng chỉ cho agent có DID. Làm theo hướng dẫn chính thức trong repo GitHub flop-labs để tạo 1 DID (khoá Ed25519). Giữ file khoá DID cẩn thận như private key, và chỉ dùng 1 DID duy nhất cho mọi hoạt động. Nếu ngại làm tay, bấm “🤖 Nhờ viết tool” để Claude viết script tạo DID chạy trên máy nhà.",
             "link": "https://github.com/flop-labs/technocore-sonnet-challenge",
@@ -54,8 +68,16 @@
             "lt": "technocore.chat"
           },
           {
-            "t": "Khi testnet mở",
-            "d": "Claude sẽ cập nhật hướng dẫn cụ thể vào sáng thứ Hai ngay sau đó: thêm mạng, faucet, task cần làm. Nếu làm được thì viết luôn tool tự động."
+            "t": "(Không bắt buộc) Làm quen bằng faucet devnet",
+            "d": "Muốn tập trước cho quen tay thì vào faucet devnet chính thức (được link từ GitHub flop-labs/network): bấm Connect → chọn ví Talisman/SubWallet → chọn tài khoản “FLOP farm” → xin token. Có bước tuỳ chọn kết nối ví EVM để chấm điểm Human Passport/Guild (điểm cao thì nhận nhiều hơn), token vẫn chỉ về địa chỉ FLOP. Xem giao dịch ở explorer.devnet.flop.network.\n• NHẮC LẠI: devnet không tính điểm airdrop, có thể bị xoá — chỉ để làm quen.",
+            "link": "https://faucet.flop.network",
+            "lt": "faucet.flop.network"
+          },
+          {
+            "t": "Ngày 24/11: testnet mở — làm gì",
+            "d": "Giờ mở cụ thể chưa công bố (giờ Mỹ thường rơi vào tối 24/11 hoặc sáng 25/11 giờ Việt Nam). Khi @flop_labs đăng bài mở testnet:\n• Mở trang testnet từ bài X chính thức hoặc từ flop.finance/official, không gõ tay tên miền.\n• Kết nối ví Talisman/SubWallet, chọn đúng tài khoản “FLOP farm”, xin token testnet ở faucet chính thức.\n• Theo tin tức, điểm tính theo việc dùng AI compute thật (nhờ AI làm tác vụ bằng token testnet) — giữ token không được gì. Làm đều mỗi ngày một ít thay vì dồn một lần.\n• Gặp lỗi/khó hiểu thì có thể gửi góp ý cho đội ngũ qua kênh chính thức — tin tức nói góp ý giá trị có thể được thưởng FLOP.\n• Ghi lại việc đã làm. Thứ Hai 30/11 Claude sẽ cập nhật hướng dẫn chi tiết theo testnet thật; nếu phần on-chain tự động hoá được, bấm “🤖 Nhờ viết tool”.",
+            "link": "https://x.com/flop_labs",
+            "lt": "x.com/flop_labs"
           }
         ]
       }
@@ -66,7 +88,7 @@
       "chain": "Arc testnet",
       "type": "Testnet",
       "status": "farm",
-      "prio": "high",
+      "prio": "mid",
       "daily": [
         "(Tự động) Tool Arc farm 2–4 giao dịch",
         "Xin faucet USDC nếu tool báo sắp hết"
@@ -79,10 +101,10 @@
       ],
       "web": "https://docs.arc.network/integrate/connect-to-arc",
       "x": "",
-      "note": "L1 của Circle, gas trả bằng USDC. Chưa xác nhận airdrop hay points chính thức, đây là kèo cược sớm.",
+      "note": "L1 của Circle, gas trả bằng USDC. Theo tin tức (The Block, Cointelegraph), Arc mainnet đã chạy từ 16/09/2026 và Circle đã mint 10 tỷ ARC, đã bán presale cho quỹ, nhưng CHƯA công bố airdrop hay tiêu chí nào cho người dùng testnet. Cơ hội thưởng cho testnet thấp hơn trước → hạ ưu tiên xuống mid.",
       "guide": {
-        "updated": "2026-11-01",
-        "warn": "Chưa có chương trình points hay airdrop chính thức. Chỉ dùng ví farm riêng, không dùng ví chính.",
+        "updated": "2026-11-09",
+        "warn": "Arc mainnet đã chạy từ 16/09/2026 (theo tin tức). Circle đã mint token ARC và bán presale cho quỹ, nhưng CHƯA công bố airdrop hay tiêu chí cho người dùng testnet — có nguồn còn nói sẽ không thưởng hồi tố cho testnet. Các trang “check eligibility ARC”, “claim ARC” đều là lừa đảo: không kết nối ví vào đó. Testnet vẫn miễn phí nên cứ để tool chạy, nhưng đừng đặt kỳ vọng lớn. Chỉ dùng ví farm riêng.",
         "steps": [
           {
             "t": "Tạo ví farm riêng",
